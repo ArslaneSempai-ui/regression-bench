@@ -4,85 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Banc de régression</title>
-<style>
-  :root {
-    --bg:#faf9f7; --panel:#fff; --line:#e4e2dd; --line-fort:#d0cdc6;
-    --text:#1a1a18; --muted:#69675f; --faint:#9a978e;
-    --accent:#1d6b52; --accent-soft:#eef4f1;
-    --warn:#8a5410; --warn-soft:#fbf2e4; --danger:#93312e; --danger-soft:#faece9;
-    --serif: ui-serif, Georgia, "Times New Roman", serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#131416; --panel:#1c1d20; --line:#2b2c30; --line-fort:#3a3c41;
-      --text:#e8e7e3; --muted:#9a9891; --faint:#6a6862;
-      --accent:#4fbb94; --accent-soft:#16302a;
-      --warn:#dda15e; --warn-soft:#2f2416; --danger:#d98682; --danger-soft:#2c1a19; }
-  }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text);
-    font:15px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
-    -webkit-font-smoothing:antialiased; overflow-x:hidden; }
-  main { max-width:900px; margin:0 auto; padding:40px 24px 120px; }
-
-  .haut { display:flex; justify-content:space-between; align-items:flex-start; gap:20px;
-    flex-wrap:wrap; margin-bottom:24px; }
-  h1 { font-family:var(--serif); font-size:25px; font-weight:400; margin:0 0 6px; letter-spacing:-0.01em; }
-  .lede { color:var(--muted); font-size:13.5px; margin:0; max-width:620px; }
-  .lang { display:flex; border:1px solid var(--line-fort); border-radius:7px; overflow:hidden; flex:0 0 auto; }
-  .lang button { border:0; background:none; padding:9px 13px; font:inherit; font-size:12px;
-    letter-spacing:.03em; color:var(--muted); cursor:pointer; min-height:38px; }
-  .lang button.on { background:var(--text); color:var(--bg); font-weight:500; }
-
-  h2 { font-size:13px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
-    color:var(--muted); margin:32px 0 12px; }
-
-  .carte { background:var(--panel); border:1px solid var(--line); border-radius:9px;
-    padding:17px 19px; margin-bottom:12px; }
-  .quoi { color:var(--muted); font-size:13px; }
-
-  .versions { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-    gap:1px; background:var(--line); border:1px solid var(--line); border-radius:9px; overflow:hidden; }
-  .v { background:var(--panel); padding:14px 16px; }
-  .v b { display:block; font-size:22px; font-weight:500; font-variant-numeric:tabular-nums;
-    letter-spacing:-0.02em; line-height:1.2; }
-  .v span { font-size:11.5px; color:var(--muted); }
-  .v code { font-size:11.5px; color:var(--accent); font-family:ui-monospace,Menlo,monospace; }
-
-  .choix { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; }
-  select { font:inherit; font-size:13.5px; padding:9px 11px; min-height:42px;
-    border:1px solid var(--line-fort); border-radius:7px; background:var(--bg); color:var(--text); }
-  select:focus { outline:2px solid var(--accent); outline-offset:1px; }
-  button.b { font:inherit; font-size:13.5px; padding:10px 15px; min-height:44px;
-    border:1px solid var(--line-fort); border-radius:7px; background:var(--panel);
-    color:var(--text); cursor:pointer; }
-  button.b:hover:not(:disabled) { border-color:var(--text); }
-  /* Le seul repère de quelqu'un qui navigue au clavier. */
-  button.b:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
-  button.b:disabled { opacity:.4; cursor:default; }
-
-  .verdict { border-radius:9px; padding:16px 19px; margin-bottom:12px; }
-  .verdict .t { font-weight:600; font-size:15px; }
-  .verdict .d { font-size:13.5px; margin-top:5px; line-height:1.6; }
-  .verdict.mauvais { background:var(--danger-soft); color:var(--danger); }
-  .verdict.bon { background:var(--accent-soft); color:var(--accent); }
-  .verdict.neutre { background:var(--panel); border:1px solid var(--line); color:var(--muted); }
-
-  .mouv { border:1px solid var(--line); border-radius:8px; padding:13px 15px; margin-bottom:9px;
-    background:var(--panel); }
-  .mouv.casse { border-left:3px solid var(--danger); }
-  .mouv.repare { border-left:3px solid var(--accent); }
-  .mouv .id { font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--muted); }
-  .mouv .entree { font-weight:500; margin-top:3px; }
-  .mouv .pq { color:var(--faint); font-size:12px; margin-top:3px; }
-  .mouv .chg { font-size:12.5px; margin-top:7px; font-family:ui-monospace,Menlo,monospace; }
-  .av { color:var(--muted); } .ap { color:var(--danger); font-weight:500; }
-  .mouv.repare .ap { color:var(--accent); }
-
-  .instable { border:1px solid var(--warn); background:var(--warn-soft); color:var(--warn);
-    border-radius:8px; padding:12px 15px; margin-bottom:9px; font-size:13.5px; }
-  .vide { color:var(--muted); font-size:13.5px; background:var(--panel);
-    border:1px dashed var(--line-fort); border-radius:9px; padding:20px; text-align:center; }
-</style>
+<link rel="stylesheet" href="/registre.css" />
 </head>
 <body>
 <main>
@@ -192,11 +114,14 @@ function blocVersions() {
   const L = t();
   $("#titreVersions").textContent = L.titreVersions;
   $("#versions").innerHTML = `
-    <div class="carte"><div class="quoi">${esc(L.versionsQuoi(etat.totalCas))}</div>
-      <div class="choix"><button class="b" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
-    <div class="versions">${etat.executions.map((e) => `
-      <div class="v"><b>${pc(e.taux)}</b>
-        <span>${e.reussis}/${e.total}</span><br><code>${esc(e.version)}</code></div>`).join("")}</div>`;
+    <div class="feuillet"><div class="quoi">${esc(L.versionsQuoi(etat.totalCas))}</div>
+      <div class="rang"><button class="b" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
+    <section class="feuillet"><div class="corps">
+      ${etat.executions.map((e) => `<div class="ligne">
+        <span class="intitule"><span class="reference">${esc(e.version)}</span>
+          <small>${e.reussis} / ${e.total}</small></span>
+        <span class="valeur">${pc(e.taux)}</span></div>`).join("")}
+    </div></section>`;
   $("#relancer").onclick = async () => {
     await agir(async () => { const r = await api("/api/lancer", "POST"); etat.executions = r.executions; await charger(); });
   };
@@ -211,7 +136,7 @@ function blocChoix() {
   const options = (choisi) => noms.map((n) =>
     `<option value="${esc(n)}"${n === choisi ? " selected" : ""}>${esc(n)}</option>`).join("");
 
-  return `<div class="carte"><div class="choix">
+  return `<div class="feuillet"><div class="rang">
       <label class="quoi" for="av">${esc(L.avant)}</label>
       <select id="av" aria-label="${esc(L.avant)}">${options(choixAvant)}</select>
       <label class="quoi" for="ap">${esc(L.apres)}</label>
@@ -223,11 +148,12 @@ function blocChoix() {
 function mouvement(m, classe) {
   const info = etat.cas[m.cas] ?? {};
   const val = (v) => JSON.stringify(v ?? null);
-  return `<div class="mouv ${classe}">
-    <div class="id">${esc(m.cas)}</div>
-    <div class="entree">${esc(JSON.stringify(info.entree))}</div>
-    <div class="pq">${esc(info.pourquoi?.[langue] ?? "")}</div>
-    <div class="chg"><span class="av">${esc(val(m.avant.obtenu))}</span> → <span class="ap">${esc(val(m.apres.obtenu))}</span></div>
+  return `<div class="ligne">
+    <span class="intitule"><span class="reference">${esc(m.cas)}</span>
+      ${esc(JSON.stringify(info.entree))}
+      <small>${esc(info.pourquoi?.[langue] ?? "")}</small></span>
+    <span class="valeur ${classe === "casse" ? "defavorable" : "favorable"}">
+      ${esc(val(m.avant.obtenu))} \u2192 ${esc(val(m.apres.obtenu))}</span>
   </div>`;
 }
 
@@ -251,19 +177,32 @@ function blocComparaison() {
       ? { cl: "neutre", t: L.neutre, d: L.neutreQuoi(b) }
       : { cl: "neutre", t: L.incomparable, d: L.incomparableQuoi };
 
-    html += `<div class="verdict ${carte.cl}"><div class="t">${esc(carte.t)}</div>
-      <div class="d">${esc(carte.d)}</div></div>`;
+    const solde = c.verdict === "regression" ? "defavorable"
+      : c.verdict === "amelioration" ? "favorable" : "attente";
+    html += `<section class="feuillet"><div class="corps">
+      <div class="ligne"><span class="intitule">${esc(L.avant)} · ${esc(c.avant)}</span>
+        <span class="valeur">${pc(c.tauxAvant)}</span></div>
+      <div class="ligne"><span class="intitule">${esc(L.apres)} · ${esc(c.apres)}</span>
+        <span class="valeur">${pc(c.tauxApres)}</span></div>
+      <div class="ligne"><span class="intitule">${esc(L.repares)}</span>
+        <span class="valeur">+${c.gains.length}</span></div>
+      <div class="ligne"><span class="intitule">${esc(L.casses)}</span>
+        <span class="valeur">\u2212${c.regressions.length}</span></div>
+      <div class="ligne total ${solde}"><span class="intitule">${esc(carte.t)}</span>
+        <span class="valeur">${c.regressions.length ? "\u2717" : c.gains.length ? "\u2713" : "="}</span></div>
+      <div class="renvoi ${solde === "defavorable" ? "defavorable" : ""}">${esc(carte.d)}</div>
+    </div></section>`;
 
     // Les cassés d'abord, toujours. C'est l'information qu'on vient chercher.
-    if (c.regressions.length) html += `<h2 style="margin-top:22px">${esc(L.casses)}</h2>` +
-      c.regressions.map((m) => mouvement(m, "casse")).join("");
-    if (c.gains.length) html += `<h2 style="margin-top:22px">${esc(L.repares)}</h2>` +
-      c.gains.map((m) => mouvement(m, "repare")).join("");
+    if (c.regressions.length) html += `<section class="feuillet"><div class="intitule">${esc(L.casses)}</div>
+      <div class="corps">${c.regressions.map((m) => mouvement(m, "casse")).join("")}</div></section>`;
+    if (c.gains.length) html += `<section class="feuillet"><div class="intitule">${esc(L.repares)}</div>
+      <div class="corps">${c.gains.map((m) => mouvement(m, "repare")).join("")}</div></section>`;
 
     const notes = [];
     if (c.silencieux.length) notes.push(L.silencieux(c.silencieux.length));
     if (c.ajoutes.length || c.retires.length) notes.push(L.jeuBouge(c.ajoutes.length, c.retires.length));
-    if (notes.length) html += `<div class="carte"><div class="quoi">${notes.map(esc).join("<br>")}</div></div>`;
+    if (notes.length) html += `<div class="feuillet"><div class="quoi">${notes.map(esc).join("<br>")}</div></div>`;
   }
 
   $("#comparaison").innerHTML = html;
@@ -277,15 +216,15 @@ function blocComparaison() {
 function blocStabilite() {
   const L = t();
   $("#titreStabilite").textContent = L.titreStabilite;
-  let html = `<div class="carte"><div class="quoi">${esc(L.stabiliteQuoi)}</div>
-    <div class="choix"><button class="b" id="stab" type="button">${esc(L.lancerStabilite)}</button></div></div>`;
+  let html = `<div class="feuillet"><div class="quoi">${esc(L.stabiliteQuoi)}</div>
+    <div class="rang"><button class="b" id="stab" type="button">${esc(L.lancerStabilite)}</button></div></div>`;
 
   if (stabilite) {
     const instables = stabilite.versions.filter((v) => !v.stable);
     html += instables.length === 0
       ? `<div class="vide">${esc(L.toutStable)}</div>`
       : instables.flatMap((v) => v.instables.map((c) =>
-          `<div class="instable">${esc(L.instable(v.version, c, stabilite.tours))}</div>`)).join("");
+          `<div class="renvoi attention">${esc(L.instable(v.version, c, stabilite.tours))}</div>`)).join("");
   } else {
     html += `<div class="vide">${esc(L.aucuneMesure)}</div>`;
   }
