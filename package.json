@@ -10,7 +10,8 @@
     "compare": "node src/compare.ts",
     "stability": "node src/stability.ts",
     "typage": "tsc --noEmit",
-    "test": "tsc --noEmit && node --test src/*.test.ts"
+    "test": "tsc --noEmit && node src/readme.ts --check && node --test src/*.test.ts",
+    "figures": "node src/readme.ts"
   },
   "engines": {
     "node": ">=24"

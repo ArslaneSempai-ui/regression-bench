@@ -20,32 +20,33 @@ npm test
 The system under test is a **sanctions name screening** — match a customer's name against
 a watchlist. Four successive versions, each one a change any engineer would defend:
 
-| Version | What changed | Pass rate |
-|---|---|---|
-| `v1-exact` | literal string comparison | 59.1 % |
-| `v2-normalise` | case, accents, punctuation, word order | 81.8 % |
-| `v3-approximatif` | edit distance, for typos and transliterations | **86.4 %** |
-| `v4-sous-budget` | v3 with a time budget, falling back to exact | 81.8 % |
+<!-- figures:versions -->
+| Version | What changed | Pass rate | 95 % interval |
+|---|---|---|---|
+| `v1-exact` | literal string comparison | 59.1 % | [39–77] |
+| `v2-normalise` | case, accents, punctuation, word order | 81.8 % | [61–93] |
+| `v3-approximatif` | edit distance, for typos and transliterations | 86.4 % | [67–95] |
+| `v4-sous-budget` | v3 with a time budget, falling back to exact | 81.8 % | [61–93] |
+<!-- /figures:versions -->
 
 Read the rate column and v3 is the winner. Now ask the bench what actually happened
 between v2 and v3:
 
 ![Comparing two versions](images/comparison.png)
 
+<!-- figures:verdict -->
 ```
 ✗ 2 regression(s) — v2-normalise -> v3-approximatif
     court-01: expected null, got "Li Wei"
     court-02: expected null, got "Li Wei"
   (3 gain(s) elsewhere — the rate moves 81.8 % -> 86.4 %,
    which does not buy back cases that had been validated once.)
-  the set cannot distinguish these versions by rate — judge the broken
-  cases instead (5 discordant, p = 1.000)
+  the set cannot distinguish these versions by rate — judge the broken cases instead (5 discordant, p = 1.000)
 ```
 
-That last line is the bench proving its own argument. **The rate difference is not
-established by this case set** — 81.8 % carries a 95 % interval of [61–93] and 86.4 %
-one of [67–95], and on the five cases that actually changed verdict the split is
-indistinguishable from a coin. Anyone reading 86.4 % as "better" is reading noise.
+Every rate on this page carries its interval because 22 cases put roughly
+±14 points around any of them. 81.8 % [61–93], n=22 against 86.4 % [67–95], n=22 is not a difference this set can establish.
+<!-- /figures:verdict -->
 
 The two broken cases are not noise. They are two named inputs where a system that once
 told two people apart no longer does. That asymmetry — a rate you cannot trust beside
