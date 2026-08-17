@@ -6,15 +6,34 @@
  */
 
 import { runs, load } from "./bench.ts";
+import { runAll } from "./run.ts";
+import { VERSIONS, DETERMINISTIC } from "./screening.ts";
 import { compare } from "./diff.ts";
 import { rate, writeRate } from "./interval.ts";
+
 import { run as emit, table } from "./figures.ts";
 
-const all = runs();
-if (all.length === 0) {
-  console.error("No run on record — start with: npm run run-all");
-  process.exit(1);
-}
+/*
+ * Record the runs if none exist, rather than telling the reader to.
+ *
+ * A cold clone found this: `npm test` failed with "No run on record", because the check
+ * needs recorded runs and `data/` is not versioned. Someone cloning the repository could
+ * not run its tests — which is the whole of what reproducibility means.
+ *
+ * The runs are cheap and deterministic, so the check produces what it needs.
+ */
+if (runs().length === 0) await runAll();
+
+/*
+ * Ordered by declaration, not by when the file happened to be written.
+ *
+ * `runs()` sorts on the recorded timestamp, and four runs finishing inside the same
+ * millisecond come back in whatever order the filesystem lists them. The table was
+ * therefore reported stale after a plain re-run, with no code change at all. A figure
+ * whose order depends on the clock is not reproducible.
+ */
+const ordre = Object.keys(VERSIONS);
+const all = runs().slice().sort((a, b) => ordre.indexOf(a.version) - ordre.indexOf(b.version));
 
 const WHAT = {
   "v1-exact": "literal string comparison",
@@ -23,15 +42,27 @@ const WHAT = {
   "v4-sous-budget": "v3 with a time budget, falling back to exact",
 } as Record<string, string>;
 
+/*
+ * A rate from a non-deterministic version is not a figure, and must not be printed as one.
+ *
+ * Five cold runs of the check reported this table stale on four of them, with no code
+ * change. The cause was `v4-sous-budget`, the time-budgeted version this bench exists to
+ * flag: its pass rate moves between runs, and the README was publishing a fixed number
+ * taken from the one version it calls non-deterministic.
+ *
+ * The first repair sampled each version for stability, which made the README build itself
+ * flaky — five rounds can agree by luck. What is known by construction is declared.
+ */
 const versions = table(
   ["Version", "What changed", "Pass rate", "95 % interval"],
   all.map((r) => {
     const x = rate(r.passed, r.total);
+    const stable = DETERMINISTIC[r.version as keyof typeof DETERMINISTIC] !== false;
     return [
       `\`${r.version}\``,
       WHAT[r.version] ?? "—",
-      `${(x.rate * 100).toFixed(1)} %`,
-      `[${(x.low * 100).toFixed(0)}–${(x.high * 100).toFixed(0)}]`,
+      stable ? `${(x.rate * 100).toFixed(1)} %` : "**varies between runs**",
+      stable ? `[${(x.low * 100).toFixed(0)}–${(x.high * 100).toFixed(0)}]` : "—",
     ];
   }),
 );

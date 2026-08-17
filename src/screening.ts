@@ -159,3 +159,23 @@ export const VERSIONS = {
 } as const;
 
 export type VersionName = keyof typeof VERSIONS;
+
+/*
+ * Which versions are deterministic, declared rather than sampled.
+ *
+ * `v4-sous-budget` races a clock, so it is non-deterministic by construction — that is
+ * its entire purpose in this demonstration. Detecting that by running it five times and
+ * checking for disagreement is unreliable in the direction that matters: five rounds can
+ * agree by luck and pronounce it stable.
+ *
+ * A README build that samples for flakiness is therefore itself flaky, which is how this
+ * came to light — five cold runs of the check, four reporting the table stale with no
+ * code change at all. What is known by construction gets declared; the stability sweep
+ * stays for systems whose behaviour is not known in advance.
+ */
+export const DETERMINISTIC: Record<VersionName, boolean> = {
+  "v1-exact": true,
+  "v2-normalise": true,
+  "v3-approximatif": true,
+  "v4-sous-budget": false,
+};

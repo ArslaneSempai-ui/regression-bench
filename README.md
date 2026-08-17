@@ -26,7 +26,7 @@ a watchlist. Four successive versions, each one a change any engineer would defe
 | `v1-exact` | literal string comparison | 59.1 % | [39–77] |
 | `v2-normalise` | case, accents, punctuation, word order | 81.8 % | [61–93] |
 | `v3-approximatif` | edit distance, for typos and transliterations | 86.4 % | [67–95] |
-| `v4-sous-budget` | v3 with a time budget, falling back to exact | 81.8 % | [61–93] |
+| `v4-sous-budget` | v3 with a time budget, falling back to exact | **varies between runs** | — |
 <!-- /figures:versions -->
 
 Read the rate column and v3 is the winner. Now ask the bench what actually happened
