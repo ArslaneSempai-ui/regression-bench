@@ -10,9 +10,7 @@
  * 80 %" and "these seven cases stopped working".
  */
 
-import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 
-const DIRECTORY = new URL("../data/runs", import.meta.url).pathname;
 
 /** Un texte dans les deux langues : le moteur ne produit jamais d'affichage. */
 export type Bilingual = { fr: string; en: string };
@@ -88,25 +86,49 @@ export async function run<E, S>(
   };
 }
 
-const pathFor = (version: string) =>
-  `${DIRECTORY}/${version.replace(/[^a-z0-9_.-]/gi, "_")}.json`;
+/**
+ * Where runs are kept, decided by whoever runs the bench.
+ *
+ * This module used to import `node:fs` and write one file per run. Everything else in it
+ * is pure — a system under test is a function, cases are data — so those four calls were
+ * the only thing stopping the bench loading anywhere but Node, which is what blocked the
+ * browser build of the hosted demo.
+ *
+ * Injecting the store costs a dozen lines and is better design regardless: a bench has no
+ * business knowing what a filesystem is. The default keeps runs in memory, which is exactly
+ * right for a demo where each visitor runs the versions themselves and nothing survives
+ * the tab.
+ */
+export type Store = {
+  read(version: string): Run | null;
+  write(execution: Run): void;
+  all(): Run[];
+};
+
+function memoryStore(): Store {
+  const kept = new Map<string, Run>();
+  return {
+    read: (version) => kept.get(version) ?? null,
+    write: (execution) => { kept.set(execution.version, execution); },
+    all: () => [...kept.values()].sort((a, b) => a.le.localeCompare(b.le)),
+  };
+}
+
+let store: Store = memoryStore();
+
+export function brancherStore(s: Store): void {
+  store = s;
+}
 
 export function save(execution: Run): string {
-  mkdirSync(DIRECTORY, { recursive: true });
-  const ou = pathFor(execution.version);
-  writeFileSync(ou, JSON.stringify(execution, null, 2));
-  return ou;
+  store.write(execution);
+  return execution.version;
 }
 
 export function load(version: string): Run | null {
-  const ou = pathFor(version);
-  return existsSync(ou) ? JSON.parse(readFileSync(ou, "utf8")) : null;
+  return store.read(version);
 }
 
 export function runs(): Run[] {
-  if (!existsSync(DIRECTORY)) return [];
-  return readdirSync(DIRECTORY)
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => JSON.parse(readFileSync(`${DIRECTORY}/${f}`, "utf8")) as Run)
-    .sort((a, b) => a.le.localeCompare(b.le));
+  return store.all();
 }

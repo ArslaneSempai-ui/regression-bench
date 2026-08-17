@@ -13,6 +13,7 @@
  */
 
 import { run } from "./bench.ts";
+import { isMain, arg } from "./cli.ts";
 import type { Case, Judge } from "./bench.ts";
 import { VERSIONS } from "./screening.ts";
 import { CASES } from "./cases.ts";
@@ -63,8 +64,8 @@ export async function measureStability<E, S>(
   return { version, rounds, unstable, stable: unstable.length === 0 };
 }
 
-if (import.meta.filename === process.argv[1]) {
-  const rounds = Number(process.argv[2] ?? 5);
+if (isMain(import.meta)) {
+  const rounds = Number(arg(2) ?? 5);
   console.log(`\nStability over ${rounds} rounds — ${CASES.length} cases\n`);
 
   for (const [name, system] of Object.entries(VERSIONS)) {

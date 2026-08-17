@@ -1,4 +1,5 @@
 import { createServer, type ServerResponse } from "node:http";
+import { brancherDisque } from "./store.ts";
 import { readFileSync } from "node:fs";
 import { runs, load } from "./bench.ts";
 import { compare } from "./diff.ts";
@@ -6,6 +7,10 @@ import { measureStability } from "./stability.ts";
 import { runAll } from "./run.ts";
 import { VERSIONS } from "./screening.ts";
 import { CASES } from "./cases.ts";
+
+/* Runs persist to disk when the bench is driven from Node; the browser build keeps
+ * them in memory instead — see `bench.ts`. */
+brancherDisque();
 
 const PORT = Number(process.env.PORT ?? 4600);
 

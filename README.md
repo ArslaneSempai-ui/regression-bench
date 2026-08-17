@@ -1,17 +1,24 @@
 # A bench that tells you what changed, not what you scored
 
 Most evaluation harnesses hand you a number. A number can't tell you that your pass rate
-went up **while three cases that used to work stopped working**.
+went up **while cases that used to work stopped working**.
 
-This one refuses to call that an improvement.
+<!-- figures:finding -->
+**The finding.** Between two versions of a sanctions screener, the pass rate went **up** — 81.8 % to 86.4 % — while **2 named cases** that had been validated stopped working. On 22 cases the rate difference is inside the noise; the broken cases are not. One of those numbers is an estimate and the other is a fact, and a dashboard renders them identically.
+<!-- /figures:finding -->
 
-```
+![Comparing two versions](images/comparison.png)
+
+```bash
 npm start          # the comparison screen, on localhost:4600
 npm run run-all    # run every version
 npm run compare -- v2-normalise v3-approximatif
 npm run stability  # the same system, several times over
-npm test
+npm test           # types, README figures, and 16 tests
 ```
+
+Everything runs locally. No API key, nothing leaves the machine, and anyone who clones this
+reproduces the numbers below.
 
 ---
 

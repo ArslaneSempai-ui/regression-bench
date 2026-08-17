@@ -6,6 +6,7 @@
  */
 
 import { runs, load } from "./bench.ts";
+import { brancherDisque } from "./store.ts";
 import { runAll } from "./run.ts";
 import { VERSIONS, DETERMINISTIC } from "./screening.ts";
 import { compare } from "./diff.ts";
@@ -14,6 +15,10 @@ import { INVENTORY, CITED } from "./inventory.ts";
 import { markdown } from "./provenance.ts";
 
 import { run as emit, table } from "./figures.ts";
+
+/* Runs persist to disk when the bench is driven from Node; the browser build keeps
+ * them in memory instead — see `bench.ts`. */
+brancherDisque();
 
 /*
  * Record the runs if none exist, rather than telling the reader to.
@@ -104,4 +109,20 @@ const stakes = table(
 /* Where every number on this page came from. Generated, and guarded by a test. */
 const provenance = markdown(INVENTORY, table);
 
-emit(new URL("../README.md", import.meta.url).pathname, { versions, verdict, stakes, provenance });
+/*
+ * The finding, in the first screenful.
+ *
+ * Generated, because a headline typed by hand is the figure most likely to go stale and
+ * the one a reader is most likely to quote back.
+ */
+const finding = (() => {
+  if (!c) return "**The finding.** Run `npm run run-all` to produce it.";
+  return `**The finding.** Between two versions of a sanctions screener, the pass rate went ` +
+    `**up** — ${(c.rateBefore * 100).toFixed(1)} % to ${(c.rateAfter * 100).toFixed(1)} % — while ` +
+    `**${c.regressions.length} named case${c.regressions.length === 1 ? "" : "s"}** that had been ` +
+    `validated stopped working. On ${all[0].total} cases the rate difference is inside the noise; ` +
+    `the broken cases are not. One of those numbers is an estimate and the other is a fact, and a ` +
+    `dashboard renders them identically.`;
+})();
+
+emit(new URL("../README.md", import.meta.url).pathname, { finding, versions, verdict, stakes, provenance });

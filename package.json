@@ -11,7 +11,8 @@
     "stability": "node src/stability.ts",
     "typage": "tsc --noEmit",
     "test": "tsc --noEmit && node src/readme.ts --check && node --test src/*.test.ts",
-    "figures": "node src/readme.ts"
+    "figures": "node src/readme.ts",
+    "pages": "tsc -p tsconfig.web.json && node src/pages.ts"
   },
   "engines": {
     "node": ">=24"

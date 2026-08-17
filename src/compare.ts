@@ -1,7 +1,13 @@
 import { load, runs } from "./bench.ts";
+import { brancherDisque } from "./store.ts";
+import { isMain } from "./cli.ts";
 import { compare, summarise } from "./diff.ts";
 
-if (import.meta.filename === process.argv[1]) {
+/* Runs persist to disk when the bench is driven from Node; the browser build keeps
+ * them in memory instead — see `bench.ts`. */
+brancherDisque();
+
+if (isMain(import.meta)) {
   const [beforeName, afterName] = process.argv.slice(2);
 
   if (!beforeName || !afterName) {

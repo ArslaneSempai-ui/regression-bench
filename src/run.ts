@@ -7,8 +7,14 @@
  */
 
 import { run, save } from "./bench.ts";
+import { brancherDisque } from "./store.ts";
+import { isMain } from "./cli.ts";
 import { VERSIONS } from "./screening.ts";
 import { CASES } from "./cases.ts";
+
+/* Runs persist to disk when the bench is driven from Node; the browser build keeps
+ * them in memory instead — see `bench.ts`. */
+brancherDisque();
 
 export async function runAll() {
   const faites = [];
@@ -20,7 +26,7 @@ export async function runAll() {
   return faites;
 }
 
-if (import.meta.filename === process.argv[1]) {
+if (isMain(import.meta)) {
   const faites = await runAll();
   console.log(`\n${CASES.length} check cases\n`);
   for (const e of faites) {
