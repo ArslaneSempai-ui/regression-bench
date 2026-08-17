@@ -10,7 +10,8 @@ import { runAll } from "./run.ts";
 import { VERSIONS, DETERMINISTIC } from "./screening.ts";
 import { compare } from "./diff.ts";
 import { rate, writeRate } from "./interval.ts";
-import { ALL } from "./regulations.ts";
+import { INVENTORY, CITED } from "./inventory.ts";
+import { markdown } from "./provenance.ts";
 
 import { run as emit, table } from "./figures.ts";
 
@@ -97,8 +98,10 @@ is not a difference this set can establish.`
  */
 const stakes = table(
   ["Citation", "Requires", "Figure", "Retrieved"],
-  ALL.filter((r) => /501\.603/.test(r.cite))
-    .map((r) => [`[${r.cite}](${r.source})`, r.says, r.figure ?? "—", r.retrieved]),
+  CITED.map((r) => [`[${r.cite}](${r.source})`, r.says, r.figure ?? "—", r.retrieved]),
 );
 
-emit(new URL("../README.md", import.meta.url).pathname, { versions, verdict, stakes });
+/* Where every number on this page came from. Generated, and guarded by a test. */
+const provenance = markdown(INVENTORY, table);
+
+emit(new URL("../README.md", import.meta.url).pathname, { versions, verdict, stakes, provenance });

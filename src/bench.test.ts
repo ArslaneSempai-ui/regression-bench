@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import { INVENTORY, MUST_DECLARE } from "./inventory.ts";
 import { REGULATIONS } from "./regulations.ts";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
@@ -161,4 +162,40 @@ test("the stakes citation is real and reproduced exactly", () => {
   const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
   assert.ok(readme.includes(r.cite), "the README must cite the section the test guards");
   assert.ok(readme.includes(r.source), "the README must link to the source, not just name it");
+});
+
+test("nothing the bench runs on is missing from the inventory", () => {
+  /*
+   * A page that classifies its own figures, typed by hand, goes stale the first time
+   * somebody adds one — and in the flattering direction, because the figure you forget to
+   * declare is the one you were least comfortable declaring.
+   */
+  const declared = new Set(INVENTORY.map((f) => f.name));
+  for (const cite of MUST_DECLARE.regulations) {
+    assert.ok(declared.has(cite), `${cite} is cited on the page and the inventory omits it`);
+  }
+  assert.ok(declared.has("CASES") && declared.has("WATCHLIST"),
+    "the case set and the watchlist are invented and must say so");
+
+  for (const f of INVENTORY.filter((x) => x.provenance === "chosen")) {
+    assert.ok(f.note && f.note.length > 20, `${f.name} is chosen and says nothing about why`);
+  }
+});
+
+test("the regression count is declared measured, and the rate is never declared without its interval", () => {
+  /*
+   * The asymmetry this bench exists to defend. A named case that stopped working is a fact
+   * about the runs; a pass rate on 22 cases is an estimate with ±14 points around it. If
+   * the inventory ever labelled them the same way, the page would be claiming the second
+   * is as solid as the first.
+   */
+  const regressions = INVENTORY.find((f) => f.name === "regressions")!;
+  const rate = INVENTORY.find((f) => f.name === "passRate")!;
+  assert.equal(regressions.provenance, "measured");
+  assert.equal(rate.provenance, "measured");
+  assert.ok(/95 %/.test(rate.note ?? ""), "the rate must carry its interval in the inventory too");
+  // Matching on the *absence* of the word "interval" failed on a note whose whole point
+  // was to say an interval is not needed. Assert what is meant, not what is spelled.
+  assert.ok(/fact about the runs/.test(regressions.note ?? ""),
+    "a named regression is a fact about the runs, and the inventory has to say so");
 });

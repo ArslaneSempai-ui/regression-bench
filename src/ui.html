@@ -22,6 +22,8 @@
 
   <h2 id="titreStabilite"></h2>
   <div id="stabilite"></div>
+
+  <p class="renvoi" id="provenanceLegende"></p>
 </main>
 
 <script type="module">
@@ -38,6 +40,7 @@ const api = async (pathFor, methode) => (await fetch(pathFor, methode ? { method
 const T = {
   fr: {
     h1: "Banc de régression",
+    provenance: "Chaque chiffre de cette page est <b>retrouvé</b> dans un texte public, <b>mesuré</b> en faisant tourner le code, <b>supposé</b> parce que personne ici ne peut le connaître, ou <b>choisi</b> par moi. Le README dit lequel, un par un.",
     lede: "Un banc qui ne donne pas une note mais dit ce qui a changé. Une justesse qui monte peut cacher des cas qui viennent de casser — et sur un système de conformité, c'est presque toujours la mauvaise nouvelle.",
     titreVersions: "Les versions évaluées",
     versionsQuoi: (n) => `Le même jeu de ${n} cas de contrôle, passé sur quatre versions successives d'un criblage de noms contre une liste de sanctions.`,
@@ -71,6 +74,7 @@ const T = {
   },
   en: {
     h1: "Regression bench",
+    provenance: "Every figure on this page is <b>retrieved</b> from a public source, <b>measured</b> by running the code, <b>assumed</b> because nobody here can know it, or <b>chosen</b> by me. The README says which, one by one.",
     lede: "A bench that doesn't hand you a score — it tells you what changed. A rising pass rate can hide cases that just broke, and on a compliance system that's almost always the bad news.",
     titreVersions: "The versions under test",
     versionsQuoi: (n) => `The same set of ${n} check cases, run against four successive versions of a name screening system matching against a sanctions list.`,
@@ -238,6 +242,7 @@ function dessiner() {
   const L = t();
   document.documentElement.lang = langue;
   $("#h1").textContent = L.h1;
+  $("#provenanceLegende").innerHTML = L.provenance;
   $("#lede").textContent = L.lede;
   $("#fr").className = langue === "fr" ? "on" : "";
   $("#en").className = langue === "en" ? "on" : "";

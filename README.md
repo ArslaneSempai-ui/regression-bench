@@ -134,6 +134,47 @@ only contains problems already solved tells you nothing about the ones ahead.
 
 ---
 
+## Where every number comes from
+
+<!-- figures:provenance -->
+**1 retrieved**, **5 measured**, **5 chosen**. What each kind means, and what you are entitled to ask of it:
+
+- **retrieved** — a public source says this, on the date recorded, in words linked from the page. *follow the link.*
+- **measured** — running the code in this repository produces it. *run it yourself — the draws are seeded.*
+- **chosen** — my judgement and nothing else. *check whether the sweep says it decides anything.*
+
+| Kind | Name | What it is | Note |
+|---|---|---|---|
+| retrieved | `31 CFR 501.603(b)(1)` | Property blocked under a sanctions programme is reported to OFAC within ten business days of being blocked. | retrieved 2026-08-17 |
+| measured | `regressions` | named cases that worked in one version and stopped in the next | a fact about the runs, not an estimate from them — it does not need an interval |
+| measured | `gains` | cases that started working | reported beside the regressions, never netted against them |
+| measured | `passRate` | share of cases a version gets right | always with its 95 % interval: 22 cases put roughly ±14 points around any of them |
+| measured | `paired verdict` | whether the case set can distinguish two versions at all | exact binomial on the discordant pairs; usually the answer is no, and it says so |
+| measured | `flakiness` | cases whose result changes between runs of the same version | determinism is declared per version, because five agreeing rounds can agree by luck |
+| chosen | `CASES` | the 22 screening cases, and the expected answer for each | hand-written to cover transliteration, word order, diacritics and short names |
+| chosen | `WATCHLIST` | the 8 names screened against | invented; a real list is hundreds of thousands of entries and cannot be published |
+| chosen | `TOLERANCE` | edit distance allowed, as a fraction of name length | 15 % — the value that makes v3 buy typos and pay with two distinct people |
+| chosen | `BUDGET_MS` | the 0.04 ms per-name budget v4 falls back under | chosen small enough that the fallback fires sometimes and not always — which is the point of v4 |
+| chosen | `VERSIONS` | the 4 versions of the screener under test | each is a change any engineer would defend, which is why the arc is worth showing |
+<!-- /figures:provenance -->
+
+This is the repository whose central claim survives its own inventory intact, and it is
+worth being precise about why.
+
+The finding is not a rate. It is that **two named cases stopped working while the average
+went up**, and that is a fact about the runs rather than an estimate from them. It does not
+weaken when you learn the case set is 22 hand-written names: "these two regressed" is true
+of any 22 cases you care to pick.
+
+The rates are the opposite, and the bench says so on its own page — 81.8 % against 86.4 %
+on 22 cases is ±14 points of interval, which is not a difference this set can establish.
+
+Facts you can trust beside a rate you cannot. That asymmetry is the entire argument for
+reporting movements instead of scores, and the table above is what makes it checkable
+rather than asserted.
+
+---
+
 ## How it's built
 
 ```
