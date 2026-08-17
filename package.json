@@ -9,7 +9,14 @@
     "lancer": "node src/lancer.ts",
     "comparer": "node src/comparer.ts",
     "stabilite": "node src/stabilite.ts",
-    "test": "node --test src/*.test.ts"
+    "test": "tsc --noEmit && node --test src/*.test.ts",
+    "typage": "tsc --noEmit"
   },
-  "engines": { "node": ">=24" }
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0"
+  }
 }

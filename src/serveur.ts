@@ -84,6 +84,13 @@ const serveur = createServer(async (req, res) => {
 // Un banc vide n'a rien à montrer : on lance les versions au démarrage.
 if (executions().length === 0) await toutLancer();
 
-serveur.listen(PORT, () => {
+/*
+ * On écoute la boucle locale, pas toutes les interfaces.
+ *
+ * `listen(PORT)` seul fait écouter Node sur `::` — l'outil devient joignable par
+ * n'importe qui sur le même réseau. Sur le wifi d'un café, ça expose un écran qui lit
+ * des dossiers clients.
+ */
+serveur.listen(PORT, "127.0.0.1", () => {
   console.log(`Banc de régression → http://localhost:${PORT}`);
 });
