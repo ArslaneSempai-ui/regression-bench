@@ -10,6 +10,7 @@ import { runAll } from "./run.ts";
 import { VERSIONS, DETERMINISTIC } from "./screening.ts";
 import { compare } from "./diff.ts";
 import { rate, writeRate } from "./interval.ts";
+import { ALL } from "./regulations.ts";
 
 import { run as emit, table } from "./figures.ts";
 
@@ -85,4 +86,19 @@ ${writeRate(rate(before!.passed, before!.total))} against ${writeRate(rate(after
 is not a difference this set can establish.`
   : "";
 
-emit(new URL("../README.md", import.meta.url).pathname, { versions, verdict });
+/*
+ * What a regression actually is, in the words of the regulation.
+ *
+ * Every other repository here cites the rule it applies; this one had nothing, because
+ * nothing about running a test bench is a legal requirement. That was the wrong place to
+ * look. The requirement is on the *system under test*: property blocked under a sanctions
+ * programme is reported within ten business days, and a screener that stops matching a
+ * name does not lower a score — it starts a clock nobody knows is running.
+ */
+const stakes = table(
+  ["Citation", "Requires", "Figure", "Retrieved"],
+  ALL.filter((r) => /501\.603/.test(r.cite))
+    .map((r) => [`[${r.cite}](${r.source})`, r.says, r.figure ?? "—", r.retrieved]),
+);
+
+emit(new URL("../README.md", import.meta.url).pathname, { versions, verdict, stakes });

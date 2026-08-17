@@ -1,4 +1,6 @@
 import { test } from "node:test";
+import { REGULATIONS } from "./regulations.ts";
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { run } from "./bench.ts";
 import { compare, summarise, DURATION_NOISE_MS } from "./diff.ts";
@@ -141,4 +143,22 @@ test("no French survives in the English half of the case set", () => {
   }
   // The guard guards itself: a detector matching nothing would pass in silence.
   assert.ok(french.test("le nom du dossier"), "the detector no longer detects French");
+});
+
+test("the stakes citation is real and reproduced exactly", () => {
+  /*
+   * The bench's README argues that a regression is a compliance event, and it rests that
+   * claim on one retrieved section. A citation that drifts out of the shared file — or a
+   * figure edited on the page and nowhere else — would leave the argument standing on
+   * nothing, which is the failure this repository exists to complain about.
+   */
+  const r = REGULATIONS.blockedPropertyReport;
+  assert.equal(r.cite, "31 CFR 501.603(b)(1)");
+  assert.equal(r.figure, "10 business days");
+  assert.ok(r.source.includes("501.603"), "the link must point at the section it cites");
+  assert.ok(r.says.includes("ten business days"), "the summary must carry the figure it summarises");
+
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+  assert.ok(readme.includes(r.cite), "the README must cite the section the test guards");
+  assert.ok(readme.includes(r.source), "the README must link to the source, not just name it");
 });

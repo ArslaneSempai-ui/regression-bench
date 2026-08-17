@@ -60,6 +60,24 @@ exists to do.
 That's not a contrived example. It's the ordinary arc of every screening project, and the
 reason teams eventually stop being able to say whether they're making progress.
 
+### What a regression actually costs
+
+Nothing about running a bench is a legal requirement, and for a while this repository
+cited nothing at all as a result. That was looking in the wrong place: the requirement is
+on the system under test.
+
+<!-- figures:stakes -->
+| Citation | Requires | Figure | Retrieved |
+|---|---|---|---|
+| [31 CFR 501.603(b)(1)](https://www.law.cornell.edu/cfr/text/31/501.603) | Property blocked under a sanctions programme is reported to OFAC within ten business days of being blocked. | 10 business days | 2026-08-17 |
+<!-- /figures:stakes -->
+
+A screener that stops matching a name does not lower a score. It fails to block property
+that should have been blocked, so the ten-day clock never starts — and nobody finds out
+from a dashboard, because the pass rate went **up**. That is the exact failure this bench
+is built to make visible, and it is why "two named cases stopped working" outranks "the
+average improved".
+
 ---
 
 ## What it does
