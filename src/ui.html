@@ -56,6 +56,8 @@
     border:1px solid var(--line-fort); border-radius:7px; background:var(--panel);
     color:var(--text); cursor:pointer; }
   button.b:hover:not(:disabled) { border-color:var(--text); }
+  /* Le seul repère de quelqu'un qui navigue au clavier. */
+  button.b:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   button.b:disabled { opacity:.4; cursor:default; }
 
   .verdict { border-radius:9px; padding:16px 19px; margin-bottom:12px; }
@@ -234,7 +236,11 @@ function blocComparaison() {
   $("#titreComparaison").textContent = L.titreComparaison;
   let html = blocChoix();
 
-  if (comparaison) {
+  if (comparaison && comparaison.erreur) {
+    // Peut arriver si une exécution disparaît entre le chargement de l'écran et le clic.
+    html += `<div class="verdict neutre"><div class="t">${esc(L.incomparable)}</div>
+      <div class="d">${esc(L.incomparableQuoi)}</div></div>`;
+  } else if (comparaison) {
     const c = comparaison;
     const a = pc(c.tauxAvant), b = pc(c.tauxApres);
     const carte = c.verdict === "regression"
