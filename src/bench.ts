@@ -1,13 +1,13 @@
 /**
  * Le banc.
  *
- * Un système à évaluer est une simple fonction. Le banc ne sait rien de ce qu'il y a
- * dedans — un modèle, des règles, un appel réseau — et c'est voulu : dès qu'un banc
- * connaît son sujet, il ne sert qu'à lui.
+ * A system under test is just a function. The bench knows nothing about what is inside —
+ * a model, some rules, a network call — and that is deliberate: the moment a bench knows
+ * its subject, it only works for that subject.
  *
- * Ce qu'il enregistre n'est pas une note mais une **exécution** : le résultat de chaque
- * cases, un par un. Une note ne se compare pas ; une exécution, si. C'est toute la
- * différence entre « on est à 80 % » et « ces sept cas-là ne marchent plus ».
+ * What it records is not a score but a **run**: the outcome of every case, one by one. A
+ * score cannot be compared; a run can. That is the whole difference between "we're at
+ * 80 %" and "these seven cases stopped working".
  */
 
 import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
@@ -19,7 +19,7 @@ export type Bilingual = { fr: string; en: string };
 
 export type Case<E, S> = {
   id: string;
-  /** À quoi sert ce cases. Un cas dont personne ne sait why il existe finit supprimé. */
+  /** What this case is for. A case nobody knows the reason for ends up deleted. */
   why: Bilingual;
   input: E;
   expected: S;
@@ -30,13 +30,13 @@ export type Result = {
   passed: boolean;
   actual: unknown;
   expected: unknown;
-  /** Millisecondes. Une régression de vitesse est une régression. */
+  /** Milliseconds. A speed regression is a regression. */
   duration: number;
   error: string | null;
 };
 
 export type Run = {
-  /** Le name de la version évaluée — pas un horodatage : on compare des versions. */
+  /** The name of the version under test — not a timestamp: versions are what get compared. */
   version: string;
   le: string;
   results: Result[];
@@ -46,7 +46,7 @@ export type Run = {
   totalDuration: number;
 };
 
-/** Comment on judge qu'une output est correcte. Par défaut, l'égalité stricte. */
+/** How an output is judged correct. Strict equality by default. */
 export type Judge<S> = (actual: S, expected: S) => boolean;
 
 const equality = <S,>(a: S, b: S) => JSON.stringify(a) === JSON.stringify(b);
@@ -68,8 +68,9 @@ export async function run<E, S>(
         duration: performance.now() - debut, error: null,
       });
     } catch (e) {
-      // Une exception est un échec du cases, pas du banc. Un banc qui s'arrête au premier
-      // plantage ne dit rien des cas suivants — et c'est souvent là qu'est l'information.
+      // An exception is a failure of the case, not of the bench. A bench that stops at the
+      // first crash says nothing about the cases after it — and that is often where the
+      // information is.
       results.push({
         caseId: c.id, passed: false, actual: null, expected: c.expected,
         duration: performance.now() - debut,

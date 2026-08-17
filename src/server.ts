@@ -18,7 +18,7 @@ function json(res: ServerResponse, body: unknown, code = 200): void {
   res.end(payload);
 }
 
-/** Le jeu, indexé : l'écran doit pouvoir montrer l'entrée et le why d'un cases. */
+/** The set, indexed: the screen has to be able to show a case's input and its reason. */
 const byCase = Object.fromEntries(CASES.map((c) => [c.id, { input: c.input, why: c.why }]));
 
 const serveur = createServer(async (req, res) => {
@@ -81,14 +81,14 @@ const serveur = createServer(async (req, res) => {
   }
 });
 
-// Un banc vide n'a rien à montrer : on lance les versions au démarrage.
+// An empty bench has nothing to show, so the versions run at startup.
 if (runs().length === 0) await runAll();
 
 /*
- * On écoute la boucle locale, pas toutes les interfaces.
+ * Bind the loopback interface, not every interface.
  *
- * `listen(PORT)` seul fait écouter Node sur `::` — l'outil devient joignable par
- * n'importe qui sur le même réseau. Sur le wifi d'un café, ça expose un écran qui lit
+ * `listen(PORT)` on its own has Node listen on `::` — the tool becomes reachable by
+ * anyone on the same network. On a café wifi that exposes a screen which reads
  * des dossiers clients.
  */
 serveur.listen(PORT, "127.0.0.1", () => {

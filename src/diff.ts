@@ -1,20 +1,20 @@
 /**
- * Comparer deux exécutions.
+ * Comparing two runs.
  *
- * C'est la raison d'être du projet. Un rate qui monte n'est pas une bonne nouvelle en
- * soi : il peut monter en cassant des cas qui marchaient. Sur un système de conformité,
+ * This is the reason the project exists. A rate going up is not good news in itself: it
+ * can go up while breaking cases that worked. On a compliance system,
  * une modification qui gagne trois cas et en perd deux n'est pas « +1 » — c'est deux
- * comportements qu'on ne sait plus expliquer à quelqu'un qui les avait validés.
+ * behaviours nobody can explain any more to the person who signed them off.
  *
- * Le verdict de ce fichier est donc volontairement sévère : **toute régression rend le
- * changement suspect, quelle que soit la moyenne.** Libre à un humain de passer outre,
+ * So the verdict in this file is deliberately severe: **any regression makes the change
+ * suspect, whatever the average did.** A human is free to override it,
  * mais en le sachant.
  */
 
 import { pairedVerdict } from "./interval.ts";
 import type { Run, Result } from "./bench.ts";
 
-/** En deçà de cet écart absolu, une variation de durée est du bruit de mesure. */
+/** Below this absolute difference, a change in duration is measurement noise. */
 export const DURATION_NOISE_MS = 5;
 
 export type Movement = {
@@ -26,18 +26,18 @@ export type Movement = {
 export type Comparison = {
   before: string;
   after: string;
-  /** Case cassés par le changement. La seule liste qui compte vraiment. */
+  /** Cases broken by the change. The only list that genuinely matters. */
   regressions: Movement[];
-  /** Case réparés par le changement. */
+  /** Cases fixed by the change. */
   gains: Movement[];
-  /** Case dont le résultat est identique mais la output a changé. */
+  /** Cases whose verdict is identical but whose output changed. */
   silent: Movement[];
-  /** Case présents d'un seul côté : le jeu a bougé, la comparaison est partielle. */
+  /** Cases present on one side only: the set moved, so the comparison is partial. */
   added: string[];
   removed: string[];
   rateBefore: number;
   rateAfter: number;
-  /** Écart de durée totale, en pourcentage — et en absolu, sans quoi il ment. */
+  /** Difference in total duration, relative — and absolute, without which it lies. */
   durationShift: number;
   durationBefore: number;
   durationAfter: number;
@@ -65,8 +65,8 @@ export function compare(before: Run, after: Run): Comparison {
     if (ra.passed && !rb.passed) regressions.push({ caseId: id, before: ra, after: rb });
     else if (!ra.passed && rb.passed) gains.push({ caseId: id, before: ra, after: rb });
     else if (JSON.stringify(ra.actual) !== JSON.stringify(rb.actual)) {
-      // Même verdict, output différente. Souvent anodin, parfois le signe qu'un cas
-      // passe pour de mauvaises raisons — et qu'il passera moins longtemps que prévu.
+      // Same verdict, different output. Often harmless, sometimes the sign that a case
+      // passes for the wrong reasons — and will pass for less long than expected.
       silent.push({ caseId: id, before: ra, after: rb });
     }
   }
@@ -95,7 +95,7 @@ export function compare(before: Run, after: Run): Comparison {
 }
 
 /**
- * La phrase qu'on veut voir dans une console d'intégration continue.
+ * The sentence you want to see in a continuous-integration console.
  *
  * Elle dit d'abord ce qui casse. Un rapport qui commence par le rate se lit comme un
  * bulletin de notes, et on n'en retient que le chiffre.

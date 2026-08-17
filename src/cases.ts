@@ -1,24 +1,23 @@
 /**
- * Le jeu de contrôle.
+ * The case set.
  *
- * Chaque cas porte un « why ». C'est la règle la plus utile de tout le projet : un
- * cas dont personne ne sait à quoi il sert finit par être supprimé le jour où il gêne,
- * généralement par la personne qui a introduit le bogue qu'il détectait.
+ * Every case carries a "why". It is the most useful rule in the whole project: a case
+ * nobody knows the purpose of gets deleted the day it becomes inconvenient, usually by
+ * the person who introduced the bug it was catching.
  *
- * Le « why » est bilingue. Un jeu de contrôle est de la documentation autant qu'un
- * test — le laisser dans une seule langue le rend illisible pour la moitié des gens
- * censés le maintenir.
+ * The "why" is bilingual. A case set is documentation as much as it is a test — leaving it
+ * in one language makes it unreadable to half the people expected to maintain it.
  *
- * Les cas négatifs — ceux qui ne doivent PAS correspondre — sont ici presque aussi
+ * The negative cases — the ones that must NOT match — are almost as
  * nombreux que les positifs. Un jeu qui ne contient que des correspondances attendues
- * récompense un système qui dit oui à tout.
+ * rewards a system that says yes to everything.
  */
 
 import type { Case } from "./bench.ts";
 import type { Match } from "./screening.ts";
 
 export const CASES: Case<string, Match>[] = [
-  // --- correspondances littérales
+  // --- literal matches
   { id: "exact-01", input: "Amina Haddad", expected: "Amina Haddad",
     why: { fr: "Le cas trivial. S'il casse, tout casse.",
                 en: "The trivial case. If it breaks, everything breaks." } },
@@ -44,7 +43,7 @@ export const CASES: Case<string, Match>[] = [
     why: { fr: "Inversion sur un name à trois éléments.",
                 en: "Swap on a three-part name." } },
 
-  // --- fautes de frappe et translittération
+  // --- typos and transliteration
   { id: "faute-01", input: "Amina Haddadd", expected: "Amina Haddad",
     why: { fr: "Une lettre doublée à la saisie.", en: "A doubled letter at entry." } },
   { id: "faute-02", input: "Olga Petrovna", expected: "Olga Petrova",
@@ -73,8 +72,8 @@ export const CASES: Case<string, Match>[] = [
 
   /*
    * Les noms courts. C'est ici que la version approximative se casse la figure, et
-   * c'est pour ces cas précis que le banc existe : ils passaient, ils ont été validés,
-   * et une amélioration de la moyenne va les emporter sans que personne le remarque.
+   * these are exactly the cases the bench exists for: they passed, they were validated,
+   * and an improvement in the average is about to take them away unnoticed.
    */
   { id: "court-01", input: "Li Wen", expected: null,
     why: { fr: "« Li Wen » n'est pas « Li Wei » : une lettre, deux personnes.",
@@ -88,7 +87,7 @@ export const CASES: Case<string, Match>[] = [
     why: { fr: "Prénom seul, très court : jamais une correspondance.",
                 en: "A single very short name fragment: never a match." } },
 
-  // --- sociétés
+  // --- companies
   { id: "societe-01", input: "Sociedad Comercial del Norte", expected: "Sociedad Comercial del Norte",
     why: { fr: "Raison sociale exacte.", en: "Exact company name." } },
   { id: "societe-02", input: "SOCIEDAD COMERCIAL DEL NORTE", expected: "Sociedad Comercial del Norte",

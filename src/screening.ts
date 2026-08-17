@@ -1,12 +1,12 @@
 /**
- * Le système évalué : cribler un name contre une liste de sanctions.
+ * The system under test: screening a name against a sanctions list.
  *
- * Trois versions successives, telles qu'on les écrit vraiment. Chacune corrige un défaut
- * visible de la précédente, et chacune introduit le sien. Ce n'est pas un exemple
- * fabriqué pour la démonstration : c'est le déroulé ordinaire d'un projet de criblage,
- * et la raison pour laquelle les équipes finissent par ne plus savoir si elles avancent.
+ * Successive versions, written the way they actually get written. Each fixes a visible
+ * defect in the one before, and each introduces its own. This is not an example
+ * manufactured for a demonstration: it is the ordinary arc of a screening project, and
+ * the reason teams eventually stop being able to say whether they are making progress.
  *
- * La liste est fictive. Aucun name réel de liste de sanctions n'y figure.
+ * The list is invented. No real sanctions-list name appears in it.
  */
 
 export type Match = string | null;
@@ -25,17 +25,17 @@ export const WATCHLIST = [
 /* ------------------------------------------------------------------ v1 : exact */
 
 /**
- * Comparison littérale, aux espaces près.
+ * Literal comparison, give or take whitespace.
  *
- * Personne ne défend cette version, et pourtant c'est toujours la première écrite. Elle
- * rate tout ce qui n'a pas été saisi à l'identique — c'est-à-dire l'essentiel.
+ * Nobody defends this version, and yet it is always the first one written. It misses
+ * everything not typed identically — which is to say, almost everything.
  */
 export function screenExact(name: string): Match {
   const n = name.trim();
   return WATCHLIST.find((x) => x === n) ?? null;
 }
 
-/* ------------------------------------------------- v2 : normalisé */
+/* ------------------------------------------------- v2: normalised */
 
 function normalise(s: string): string {
   return s
@@ -46,14 +46,14 @@ function normalise(s: string): string {
     .trim();
 }
 
-/** Les mots triés : « Ali Mohamed » et « Mohamed Ali » deviennent la même chose. */
+/** Words sorted: "Ali Mohamed" and "Mohamed Ali" become the same thing. */
 const sortedWords = (s: string) => normalise(s).split(" ").filter(Boolean).sort().join(" ");
 
 /**
  * Casse, accents, ponctuation et ordre des mots.
  *
- * Gain réel et sans contrepartie visible — c'est ce qui la rend dangereuse : elle
- * installe la confiance que la version suivante va dépenser.
+ * A real gain with no visible cost — which is what makes it dangerous: it builds the
+ * confidence the next version is about to spend.
  */
 export function screenNormalised(name: string): Match {
   const cible = sortedWords(name);
@@ -82,15 +82,15 @@ function distance(a: string, b: string): number {
   return previous[n];
 }
 
-/** Tolérance en nombre de caractères, proportionnelle à la longueur du name. */
+/** Tolerance in characters, proportional to the length of the name. */
 export const TOLERANCE = (longueur: number) => Math.max(1, Math.floor(longueur * 0.15));
 
 /**
- * Distance d'édition, pour rattraper les fautes de frappe et les translittérations.
+ * Edit distance, to catch typos and transliterations.
  *
- * Elle gagne ce que la v2 ratait. Elle perd ailleurs, et c'est le cœur du sujet : sur
- * les noms courts, une tolérance d'un seul caractère suffit à confondre deux personnes
- * distinctes. « Li Wei » et « Li Wen » sont à une lettre l'un de l'autre.
+ * It gains what v2 missed. It loses elsewhere, and that is the heart of the matter: on
+ * short names, a tolerance of one character is enough to confuse two distinct people.
+ * "Li Wei" and "Li Wen" are one letter apart.
  *
  * Le rate global monte. Des cas qui passaient ne passent plus. C'est exactement ce que
  * le banc existe pour rendre visible.
@@ -115,21 +115,21 @@ export function screenFuzzy(name: string): Match {
 
 /* -------------------------------------------- v4 : approximatif sous budget */
 
-/** Budget alloué à la recherche approximative, en millisecondes. */
+/** Budget allowed for the fuzzy search, in milliseconds. */
 export const BUDGET_MS = 0.04;
 
 /**
- * La même chose, avec un garde-fou de temps.
+ * The same thing, with a time guard.
  *
- * Motif très répandu en production : la recherche approximative coûte cher, on lui
- * alloue un budget, et au-delà on se rabat sur une comparaison exacte pour ne pas tenir
- * la ligne. Personne ne considère ça comme un changement de comportement — c'est présenté
+ * A very common production pattern: fuzzy search is expensive, so it gets a budget, and
+ * past that the system falls back to exact comparison rather than hold the line. Nobody
+ * treats this as a change of behaviour — it is presented
  * comme une optimisation.
  *
- * C'en est un pourtant : sous payload, le même name donne un jour une correspondance et le
+ * It is one, though: under load, the same name yields a match one day and
  * lendemain aucune. Le banc ne peut plus compare quoi que ce soit, parce qu'il mesure
- * l'état de la machine autant que le code. C'est précisément ce que la mesure de
- * stabilité sert à débusquer before de perdre une semaine sur de fausses régressions.
+ * the state of the machine as much as the code. That is precisely what the stability
+ * measurement is for — flushing it out before a week is lost to false regressions.
  */
 export function screenUnderBudget(name: string): Match {
   const cible = sortedWords(name);
@@ -138,10 +138,10 @@ export function screenUnderBudget(name: string): Match {
   const exact = WATCHLIST.find((x) => sortedWords(x) === cible);
   if (exact) return exact;
 
-  const debut = performance.now();
+  const started = performance.now();
   let best: { name: string; d: number } | null = null;
   for (const x of WATCHLIST) {
-    if (performance.now() - debut > BUDGET_MS) return null; // budget épuisé : repli
+    if (performance.now() - started > BUDGET_MS) return null; // budget spent: fall back
     const d = distance(cible, sortedWords(x));
     if (d <= TOLERANCE(Math.max(cible.length, sortedWords(x).length)) &&
         (best === null || d < best.d)) {

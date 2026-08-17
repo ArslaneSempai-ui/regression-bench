@@ -1,14 +1,14 @@
 /**
- * La stabilité : le même système, le même cases, plusieurs fois.
+ * Stability: the same system, the same cases, several times over.
  *
  * Presque personne ne fait cette mesure, et c'est celle qui ruine le plus de bancs.
- * Un cas qui réussit sept fois sur dix n'est pas un cas qui réussit : c'est un cas dont
- * le verdict dépend du jour où on l'a lancé. Comparé à une exécution antérieure, il
- * produira des « régressions » et des « gains » qui n'ont aucun rapport avec le code —
- * et l'équipe apprendra à ignorer le banc.
+ * A case that passes seven times out of ten is not a passing case: it is a case whose
+ * verdict depends on the day you ran it. Compared against an earlier run it will produce
+ * "regressions" and "gains" that have nothing to do with the code — and the team will
+ * learn to ignore the bench.
  *
- * Sur un système déterministe, rien ne bouge. Dès qu'un modèle de langage, un ordre de
- * lecture ou un appel réseau entre dans la chaîne, cette mesure devient la première à
+ * On a deterministic system nothing moves. The moment a language model, a read order or a
+ * network call enters the chain, this measurement becomes the first one to
  * faire, before toute comparaison de versions.
  */
 
@@ -21,7 +21,7 @@ export type Unstable = {
   caseId: string;
   passes: number;
   rounds: number;
-  /** Les outputs distinctes observées. Deux valeurs = deux comportements. */
+  /** The distinct outputs observed. Two values means two behaviours. */
   outputs: string[];
 };
 
@@ -29,7 +29,7 @@ export type Stability = {
   version: string;
   rounds: number;
   unstable: Unstable[];
-  /** Vrai si chaque cas a donné le même verdict à chaque tour. */
+  /** True if every case gave the same verdict on every round. */
   stable: boolean;
 };
 
@@ -54,7 +54,7 @@ export async function measureStability<E, S>(
 
   const unstable: Unstable[] = [];
   for (const [id, n] of passes) {
-    // Unstable = ni toujours réussi, ni toujours échoué.
+    // Unstable = neither always passing nor always failing.
     if (n !== 0 && n !== rounds) {
       unstable.push({ caseId: id, passes: n, rounds, outputs: [...outputs.get(id)!] });
     }

@@ -1,9 +1,9 @@
 /**
- * Lancer les trois versions et save chaque exécution.
+ * Run every version and save each run.
  *
- * Les exécutions sont nommées par version, pas horodatées : on compare « v2 contre v3 »,
- * jamais « lundi contre mardi ». Un banc qui range par date pousse à regarder la
- * dernière colonne ; un banc qui range par version pousse à regarder la différence.
+ * Runs are named by version, not timestamped: what gets compared is "v2 against v3", never
+ * "Monday against Tuesday". A bench ordered by date pushes you to look at the last column;
+ * a bench ordered by version pushes you to look at the difference.
  */
 
 import { run, save } from "./bench.ts";

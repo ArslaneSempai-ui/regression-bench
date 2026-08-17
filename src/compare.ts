@@ -20,7 +20,7 @@ if (import.meta.filename === process.argv[1]) {
   const c = compare(before, after);
   console.log("\n" + summarise(c) + "\n");
 
-  // Le code de output, pour qu'une intégration continue puisse bloquer sur une
-  // régression. Sans ça, le rapport est un document que personne n'ouvre.
+  // The exit code, so continuous integration can block on a regression. Without it the
+  // report is a document nobody opens.
   process.exit(c.verdict === "regression" ? 1 : 0);
 }
