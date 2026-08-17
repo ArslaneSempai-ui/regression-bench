@@ -26,7 +26,7 @@
 <script type="module">
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-const api = async (chemin, methode) => (await fetch(chemin, methode ? { method: methode } : {})).json();
+const api = async (pathFor, methode) => (await fetch(pathFor, methode ? { method: methode } : {})).json();
 
 /**
  * Les deux langues.
@@ -75,7 +75,7 @@ const T = {
     versionsQuoi: (n) => `The same set of ${n} check cases, run against four successive versions of a name screening system matching against a sanctions list.`,
     relancer: "Re-run all four versions",
     titreComparaison: "Compare two versions",
-    comparer: "Compare", avant: "before", apres: "after",
+    compare: "Compare", before: "before", after: "after",
 
     regression: (n) => `${n} regression${n > 1 ? "s" : ""} — change is suspect`,
     regressionQuoi: (g, a, b) => g > 0
@@ -89,14 +89,14 @@ const T = {
     incomparableQuoi: "These two runs share no cases.",
 
     casses: "What stopped working", repares: "What works now",
-    silencieux: (n) => `${n} case(s) with an unchanged verdict but a different output`,
+    silent: (n) => `${n} case(s) with an unchanged verdict but a different output`,
     jeuBouge: (a, r) => `Case set changed: ${a} added, ${r} removed — the comparison is partial.`,
 
     titreStabilite: "Stability",
     stabiliteQuoi: "The same system, the same case, several times. A case that passes seven times out of eight isn't a case that passes: compared against tomorrow it will produce regressions that have nothing to do with the code.",
     lancerStabilite: "Measure over 8 runs",
     stable: "stable",
-    instable: (n, c, tours) => `${n} — ${c.cas}: ${c.reussites}/${tours}, outputs seen: ${c.sorties.join(" / ")}`,
+    instable: (n, c, runs) => `${n} — ${c.cas}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
     toutStable: "Every version is stable.",
     aucuneMesure: "Not measured yet.",
     aucun: "none", calcul: "Measuring…",
@@ -107,29 +107,29 @@ let langue = localStorage.getItem("langue") === "en" ? "en" : "fr";
 const t = () => T[langue];
 const pc = (x) => (x * 100).toFixed(1) + " %";
 
-let etat = null, comparaison = null, stabilite = null, occupe = false;
+let state = null, comparaison = null, stabilite = null, occupe = false;
 let choixAvant = null, choixApres = null;
 
 function blocVersions() {
   const L = t();
   $("#titreVersions").textContent = L.titreVersions;
   $("#versions").innerHTML = `
-    <div class="feuillet"><div class="quoi">${esc(L.versionsQuoi(etat.totalCas))}</div>
+    <div class="feuillet"><div class="quoi">${esc(L.versionsQuoi(state.totalCases))}</div>
       <div class="rang"><button class="b" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
     <section class="feuillet"><div class="corps">
-      ${etat.executions.map((e) => `<div class="ligne">
+      ${state.runs.map((e) => `<div class="ligne">
         <span class="intitule"><span class="reference">${esc(e.version)}</span>
-          <small>${e.reussis} / ${e.total}</small></span>
-        <span class="valeur">${pc(e.taux)}</span></div>`).join("")}
+          <small>${e.passed} / ${e.total}</small></span>
+        <span class="valeur">${pc(e.rate)}</span></div>`).join("")}
     </div></section>`;
   $("#relancer").onclick = async () => {
-    await agir(async () => { const r = await api("/api/lancer", "POST"); etat.executions = r.executions; await charger(); });
+    await agir(async () => { const r = await api("/api/run", "POST"); state.runs = r.runs; await charger(); });
   };
 }
 
 function blocChoix() {
   const L = t();
-  const noms = etat.executions.map((e) => e.version);
+  const noms = state.runs.map((e) => e.version);
   if (!noms.includes(choixAvant)) choixAvant = noms[1] ?? noms[0];
   if (!noms.includes(choixApres)) choixApres = noms[2] ?? noms[noms.length - 1];
 
@@ -137,23 +137,23 @@ function blocChoix() {
     `<option value="${esc(n)}"${n === choisi ? " selected" : ""}>${esc(n)}</option>`).join("");
 
   return `<div class="feuillet"><div class="rang">
-      <label class="quoi" for="av">${esc(L.avant)}</label>
-      <select id="av" aria-label="${esc(L.avant)}">${options(choixAvant)}</select>
-      <label class="quoi" for="ap">${esc(L.apres)}</label>
-      <select id="ap" aria-label="${esc(L.apres)}">${options(choixApres)}</select>
-      <button class="b" id="cmp" type="button">${esc(L.comparer)}</button>
+      <label class="quoi" for="av">${esc(L.before)}</label>
+      <select id="av" aria-label="${esc(L.before)}">${options(choixAvant)}</select>
+      <label class="quoi" for="ap">${esc(L.after)}</label>
+      <select id="ap" aria-label="${esc(L.after)}">${options(choixApres)}</select>
+      <button class="b" id="cmp" type="button">${esc(L.compare)}</button>
     </div></div>`;
 }
 
 function mouvement(m, classe) {
-  const info = etat.cas[m.cas] ?? {};
+  const info = state.cases[m.cas] ?? {};
   const val = (v) => JSON.stringify(v ?? null);
   return `<div class="ligne">
     <span class="intitule"><span class="reference">${esc(m.cas)}</span>
-      ${esc(JSON.stringify(info.entree))}
-      <small>${esc(info.pourquoi?.[langue] ?? "")}</small></span>
+      ${esc(JSON.stringify(info.input))}
+      <small>${esc(info.why?.[langue] ?? "")}</small></span>
     <span class="valeur ${classe === "casse" ? "defavorable" : "favorable"}">
-      ${esc(val(m.avant.obtenu))} \u2192 ${esc(val(m.apres.obtenu))}</span>
+      ${esc(val(m.before.actual))} \u2192 ${esc(val(m.after.actual))}</span>
   </div>`;
 }
 
@@ -162,13 +162,13 @@ function blocComparaison() {
   $("#titreComparaison").textContent = L.titreComparaison;
   let html = blocChoix();
 
-  if (comparaison && comparaison.erreur) {
+  if (comparaison && comparaison.error) {
     // Peut arriver si une exécution disparaît entre le chargement de l'écran et le clic.
     html += `<div class="verdict neutre"><div class="t">${esc(L.incomparable)}</div>
       <div class="d">${esc(L.incomparableQuoi)}</div></div>`;
   } else if (comparaison) {
     const c = comparaison;
-    const a = pc(c.tauxAvant), b = pc(c.tauxApres);
+    const a = pc(c.rateBefore), b = pc(c.rateAfter);
     const carte = c.verdict === "regression"
       ? { cl: "mauvais", t: L.regression(c.regressions.length), d: L.regressionQuoi(c.gains.length, a, b) }
       : c.verdict === "amelioration"
@@ -180,10 +180,10 @@ function blocComparaison() {
     const solde = c.verdict === "regression" ? "defavorable"
       : c.verdict === "amelioration" ? "favorable" : "attente";
     html += `<section class="feuillet"><div class="corps">
-      <div class="ligne"><span class="intitule">${esc(L.avant)} · ${esc(c.avant)}</span>
-        <span class="valeur">${pc(c.tauxAvant)}</span></div>
-      <div class="ligne"><span class="intitule">${esc(L.apres)} · ${esc(c.apres)}</span>
-        <span class="valeur">${pc(c.tauxApres)}</span></div>
+      <div class="ligne"><span class="intitule">${esc(L.before)} · ${esc(c.before)}</span>
+        <span class="valeur">${pc(c.rateBefore)}</span></div>
+      <div class="ligne"><span class="intitule">${esc(L.after)} · ${esc(c.after)}</span>
+        <span class="valeur">${pc(c.rateAfter)}</span></div>
       <div class="ligne"><span class="intitule">${esc(L.repares)}</span>
         <span class="valeur">+${c.gains.length}</span></div>
       <div class="ligne"><span class="intitule">${esc(L.casses)}</span>
@@ -200,8 +200,8 @@ function blocComparaison() {
       <div class="corps">${c.gains.map((m) => mouvement(m, "repare")).join("")}</div></section>`;
 
     const notes = [];
-    if (c.silencieux.length) notes.push(L.silencieux(c.silencieux.length));
-    if (c.ajoutes.length || c.retires.length) notes.push(L.jeuBouge(c.ajoutes.length, c.retires.length));
+    if (c.silent.length) notes.push(L.silent(c.silent.length));
+    if (c.added.length || c.removed.length) notes.push(L.jeuBouge(c.added.length, c.removed.length));
     if (notes.length) html += `<div class="feuillet"><div class="quoi">${notes.map(esc).join("<br>")}</div></div>`;
   }
 
@@ -209,7 +209,7 @@ function blocComparaison() {
   $("#av").onchange = (e) => { choixAvant = e.target.value; };
   $("#ap").onchange = (e) => { choixApres = e.target.value; };
   $("#cmp").onclick = () => agir(async () => {
-    comparaison = await api(`/api/comparer?avant=${encodeURIComponent(choixAvant)}&apres=${encodeURIComponent(choixApres)}`);
+    comparaison = await api(`/api/compare?before=${encodeURIComponent(choixAvant)}&after=${encodeURIComponent(choixApres)}`);
   });
 }
 
@@ -220,17 +220,17 @@ function blocStabilite() {
     <div class="rang"><button class="b" id="stab" type="button">${esc(L.lancerStabilite)}</button></div></div>`;
 
   if (stabilite) {
-    const instables = stabilite.versions.filter((v) => !v.stable);
-    html += instables.length === 0
+    const unstable = stabilite.versions.filter((v) => !v.stable);
+    html += unstable.length === 0
       ? `<div class="vide">${esc(L.toutStable)}</div>`
-      : instables.flatMap((v) => v.instables.map((c) =>
-          `<div class="renvoi attention">${esc(L.instable(v.version, c, stabilite.tours))}</div>`)).join("");
+      : unstable.flatMap((v) => v.unstable.map((c) =>
+          `<div class="renvoi attention">${esc(L.instable(v.version, c, stabilite.runs))}</div>`)).join("");
   } else {
     html += `<div class="vide">${esc(L.aucuneMesure)}</div>`;
   }
 
   $("#stabilite").innerHTML = html;
-  $("#stab").onclick = () => agir(async () => { stabilite = await api("/api/stabilite?tours=8", "POST"); });
+  $("#stab").onclick = () => agir(async () => { stabilite = await api("/api/stability?runs=8", "POST"); });
 }
 
 function dessiner() {
@@ -254,7 +254,7 @@ async function agir(travail) {
   }
 }
 
-async function charger() { etat = await api("/api/etat"); }
+async function charger() { state = await api("/api/state"); }
 
 for (const l of ["fr", "en"]) {
   $(`#${l}`).onclick = () => { langue = l; localStorage.setItem("langue", l); dessiner(); };

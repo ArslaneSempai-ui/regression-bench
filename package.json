@@ -5,12 +5,12 @@
   "type": "module",
   "description": "An evaluation bench that reports what changed, not what scored.",
   "scripts": {
-    "start": "node src/serveur.ts",
-    "lancer": "node src/lancer.ts",
-    "comparer": "node src/comparer.ts",
-    "stabilite": "node src/stabilite.ts",
-    "test": "tsc --noEmit && node --test src/*.test.ts",
-    "typage": "tsc --noEmit"
+    "start": "node src/server.ts",
+    "run-all": "node src/run.ts",
+    "compare": "node src/compare.ts",
+    "stability": "node src/stability.ts",
+    "typage": "tsc --noEmit",
+    "test": "tsc --noEmit && node --test src/*.test.ts"
   },
   "engines": {
     "node": ">=24"

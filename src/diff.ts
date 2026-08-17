@@ -1,7 +1,7 @@
 /**
  * Comparer deux exécutions.
  *
- * C'est la raison d'être du projet. Un taux qui monte n'est pas une bonne nouvelle en
+ * C'est la raison d'être du projet. Un rate qui monte n'est pas une bonne nouvelle en
  * soi : il peut monter en cassant des cas qui marchaient. Sur un système de conformité,
  * une modification qui gagne trois cas et en perd deux n'est pas « +1 » — c'est deux
  * comportements qu'on ne sait plus expliquer à quelqu'un qui les avait validés.
@@ -11,76 +11,76 @@
  * mais en le sachant.
  */
 
-import type { Execution, Resultat } from "./banc.ts";
+import type { Run, Result } from "./bench.ts";
 
 /** En deçà de cet écart absolu, une variation de durée est du bruit de mesure. */
-export const SEUIL_DUREE_MS = 5;
+export const DURATION_NOISE_MS = 5;
 
-export type Mouvement = {
-  cas: string;
-  avant: Resultat;
-  apres: Resultat;
+export type Movement = {
+  caseId: string;
+  before: Result;
+  after: Result;
 };
 
-export type Comparaison = {
-  avant: string;
-  apres: string;
-  /** Cas cassés par le changement. La seule liste qui compte vraiment. */
-  regressions: Mouvement[];
-  /** Cas réparés par le changement. */
-  gains: Mouvement[];
-  /** Cas dont le résultat est identique mais la sortie a changé. */
-  silencieux: Mouvement[];
-  /** Cas présents d'un seul côté : le jeu a bougé, la comparaison est partielle. */
-  ajoutes: string[];
-  retires: string[];
-  tauxAvant: number;
-  tauxApres: number;
+export type Comparison = {
+  before: string;
+  after: string;
+  /** Case cassés par le changement. La seule liste qui compte vraiment. */
+  regressions: Movement[];
+  /** Case réparés par le changement. */
+  gains: Movement[];
+  /** Case dont le résultat est identique mais la output a changé. */
+  silent: Movement[];
+  /** Case présents d'un seul côté : le jeu a bougé, la comparaison est partielle. */
+  added: string[];
+  removed: string[];
+  rateBefore: number;
+  rateAfter: number;
   /** Écart de durée totale, en pourcentage — et en absolu, sans quoi il ment. */
-  ecartDuree: number;
-  dureeAvant: number;
-  dureeApres: number;
+  durationShift: number;
+  durationBefore: number;
+  durationAfter: number;
   verdict: "regression" | "amelioration" | "neutre" | "incomparable";
 };
 
-export function comparer(avant: Execution, apres: Execution): Comparaison {
-  const parId = (e: Execution) => new Map(e.resultats.map((r) => [r.cas, r]));
-  const a = parId(avant), b = parId(apres);
+export function compare(before: Run, after: Run): Comparison {
+  const parId = (e: Run) => new Map(e.results.map((r) => [r.caseId, r]));
+  const a = parId(before), b = parId(after);
 
-  const regressions: Mouvement[] = [];
-  const gains: Mouvement[] = [];
-  const silencieux: Mouvement[] = [];
+  const regressions: Movement[] = [];
+  const gains: Movement[] = [];
+  const silent: Movement[] = [];
 
   for (const [id, ra] of a) {
     const rb = b.get(id);
     if (!rb) continue;
-    if (ra.reussi && !rb.reussi) regressions.push({ cas: id, avant: ra, apres: rb });
-    else if (!ra.reussi && rb.reussi) gains.push({ cas: id, avant: ra, apres: rb });
-    else if (JSON.stringify(ra.obtenu) !== JSON.stringify(rb.obtenu)) {
-      // Même verdict, sortie différente. Souvent anodin, parfois le signe qu'un cas
+    if (ra.passed && !rb.passed) regressions.push({ caseId: id, before: ra, after: rb });
+    else if (!ra.passed && rb.passed) gains.push({ caseId: id, before: ra, after: rb });
+    else if (JSON.stringify(ra.actual) !== JSON.stringify(rb.actual)) {
+      // Même verdict, output différente. Souvent anodin, parfois le signe qu'un cas
       // passe pour de mauvaises raisons — et qu'il passera moins longtemps que prévu.
-      silencieux.push({ cas: id, avant: ra, apres: rb });
+      silent.push({ caseId: id, before: ra, after: rb });
     }
   }
 
-  const ajoutes = [...b.keys()].filter((id) => !a.has(id));
-  const retires = [...a.keys()].filter((id) => !b.has(id));
+  const added = [...b.keys()].filter((id) => !a.has(id));
+  const removed = [...a.keys()].filter((id) => !b.has(id));
 
   const communs = [...a.keys()].filter((id) => b.has(id)).length;
-  const verdict: Comparaison["verdict"] =
+  const verdict: Comparison["verdict"] =
     communs === 0 ? "incomparable"
       : regressions.length > 0 ? "regression"
       : gains.length > 0 ? "amelioration"
       : "neutre";
 
   return {
-    avant: avant.version, apres: apres.version,
-    regressions, gains, silencieux, ajoutes, retires,
-    tauxAvant: avant.taux, tauxApres: apres.taux,
-    ecartDuree: avant.dureeTotale === 0 ? 0
-      : (apres.dureeTotale - avant.dureeTotale) / avant.dureeTotale,
-    dureeAvant: avant.dureeTotale,
-    dureeApres: apres.dureeTotale,
+    before: before.version, after: after.version,
+    regressions, gains, silent, added, removed,
+    rateBefore: before.rate, rateAfter: after.rate,
+    durationShift: before.totalDuration === 0 ? 0
+      : (after.totalDuration - before.totalDuration) / before.totalDuration,
+    durationBefore: before.totalDuration,
+    durationAfter: after.totalDuration,
     verdict,
   };
 }
@@ -88,35 +88,35 @@ export function comparer(avant: Execution, apres: Execution): Comparaison {
 /**
  * La phrase qu'on veut voir dans une console d'intégration continue.
  *
- * Elle dit d'abord ce qui casse. Un rapport qui commence par le taux se lit comme un
+ * Elle dit d'abord ce qui casse. Un rapport qui commence par le rate se lit comme un
  * bulletin de notes, et on n'en retient que le chiffre.
  */
-export function resume(c: Comparaison): string {
+export function summarise(c: Comparison): string {
   const pc = (x: number) => (x * 100).toFixed(1) + " %";
   const lignes: string[] = [];
 
   if (c.verdict === "regression") {
-    lignes.push(`✗ ${c.regressions.length} régression(s) — ${c.avant} → ${c.apres}`);
+    lignes.push(`✗ ${c.regressions.length} régression(s) — ${c.before} → ${c.after}`);
     for (const r of c.regressions) {
-      lignes.push(`    ${r.cas} : attendu ${JSON.stringify(r.apres.attendu)}, obtenu ${JSON.stringify(r.apres.obtenu)}`);
+      lignes.push(`    ${r.caseId} : expected ${JSON.stringify(r.after.expected)}, actual ${JSON.stringify(r.after.actual)}`);
     }
     if (c.gains.length > 0) {
-      lignes.push(`  (${c.gains.length} gain(s) par ailleurs — le taux passe de ${pc(c.tauxAvant)} à ${pc(c.tauxApres)},`);
+      lignes.push(`  (${c.gains.length} gain(s) par ailleurs — le rate passe de ${pc(c.rateBefore)} à ${pc(c.rateAfter)},`);
       lignes.push(`   ce qui ne rachète pas les cas cassés : ils avaient été validés une fois.)`);
     }
   } else if (c.verdict === "amelioration") {
-    lignes.push(`✓ ${c.gains.length} gain(s), aucune régression — ${pc(c.tauxAvant)} → ${pc(c.tauxApres)}`);
+    lignes.push(`✓ ${c.gains.length} gain(s), aucune régression — ${pc(c.rateBefore)} → ${pc(c.rateAfter)}`);
   } else if (c.verdict === "neutre") {
-    lignes.push(`= aucun changement de verdict — ${pc(c.tauxApres)}`);
+    lignes.push(`= aucun changement de verdict — ${pc(c.rateAfter)}`);
   } else {
-    lignes.push(`? aucun cas commun entre ${c.avant} et ${c.apres} : rien à comparer`);
+    lignes.push(`? aucun cas commun entre ${c.before} et ${c.after} : rien à compare`);
   }
 
-  if (c.silencieux.length > 0) {
-    lignes.push(`  ${c.silencieux.length} cas au verdict inchangé mais à la sortie différente`);
+  if (c.silent.length > 0) {
+    lignes.push(`  ${c.silent.length} cas au verdict inchangé mais à la output différente`);
   }
-  if (c.ajoutes.length > 0 || c.retires.length > 0) {
-    lignes.push(`  jeu modifié : ${c.ajoutes.length} ajouté(s), ${c.retires.length} retiré(s) — comparaison partielle`);
+  if (c.added.length > 0 || c.removed.length > 0) {
+    lignes.push(`  jeu modifié : ${c.added.length} ajouté(s), ${c.removed.length} retiré(s) — comparaison partielle`);
   }
   /*
    * La durée ne se signale qu'en pourcentage ET en absolu.
@@ -125,9 +125,9 @@ export function resume(c: Comparaison): string {
    * pourcentage calculé sur une base minuscule est du bruit habillé en signal — le
    * défaut exact que ce projet reproche aux tableaux de bord.
    */
-  const ecartMs = c.dureeApres - c.dureeAvant;
-  if (Math.abs(c.ecartDuree) > 0.25 && Math.abs(ecartMs) >= SEUIL_DUREE_MS) {
-    lignes.push(`  durée ${ecartMs > 0 ? "+" : ""}${ecartMs.toFixed(0)} ms (${c.ecartDuree > 0 ? "+" : ""}${(c.ecartDuree * 100).toFixed(0)} %)`);
+  const ecartMs = c.durationAfter - c.durationBefore;
+  if (Math.abs(c.durationShift) > 0.25 && Math.abs(ecartMs) >= DURATION_NOISE_MS) {
+    lignes.push(`  durée ${ecartMs > 0 ? "+" : ""}${ecartMs.toFixed(0)} ms (${c.durationShift > 0 ? "+" : ""}${(c.durationShift * 100).toFixed(0)} %)`);
   }
   return lignes.join("\n");
 }

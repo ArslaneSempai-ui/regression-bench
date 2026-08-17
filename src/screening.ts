@@ -1,17 +1,17 @@
 /**
- * Le système évalué : cribler un nom contre une liste de sanctions.
+ * Le système évalué : cribler un name contre une liste de sanctions.
  *
  * Trois versions successives, telles qu'on les écrit vraiment. Chacune corrige un défaut
  * visible de la précédente, et chacune introduit le sien. Ce n'est pas un exemple
  * fabriqué pour la démonstration : c'est le déroulé ordinaire d'un projet de criblage,
  * et la raison pour laquelle les équipes finissent par ne plus savoir si elles avancent.
  *
- * La liste est fictive. Aucun nom réel de liste de sanctions n'y figure.
+ * La liste est fictive. Aucun name réel de liste de sanctions n'y figure.
  */
 
-export type Correspondance = string | null;
+export type Match = string | null;
 
-export const LISTE = [
+export const WATCHLIST = [
   "Viktor Alexeyevich Morozov",
   "Amina Haddad",
   "Li Wei",
@@ -25,19 +25,19 @@ export const LISTE = [
 /* ------------------------------------------------------------------ v1 : exact */
 
 /**
- * Comparaison littérale, aux espaces près.
+ * Comparison littérale, aux espaces près.
  *
  * Personne ne défend cette version, et pourtant c'est toujours la première écrite. Elle
  * rate tout ce qui n'a pas été saisi à l'identique — c'est-à-dire l'essentiel.
  */
-export function criblerExact(nom: string): Correspondance {
-  const n = nom.trim();
-  return LISTE.find((x) => x === n) ?? null;
+export function screenExact(name: string): Match {
+  const n = name.trim();
+  return WATCHLIST.find((x) => x === n) ?? null;
 }
 
 /* ------------------------------------------------- v2 : normalisé */
 
-function normaliser(s: string): string {
+function normalise(s: string): string {
   return s
     .normalize("NFD").replace(/[̀-ͯ]/g, "")  // accents
     .toLowerCase()
@@ -47,7 +47,7 @@ function normaliser(s: string): string {
 }
 
 /** Les mots triés : « Ali Mohamed » et « Mohamed Ali » deviennent la même chose. */
-const motsTries = (s: string) => normaliser(s).split(" ").filter(Boolean).sort().join(" ");
+const sortedWords = (s: string) => normalise(s).split(" ").filter(Boolean).sort().join(" ");
 
 /**
  * Casse, accents, ponctuation et ordre des mots.
@@ -55,10 +55,10 @@ const motsTries = (s: string) => normaliser(s).split(" ").filter(Boolean).sort()
  * Gain réel et sans contrepartie visible — c'est ce qui la rend dangereuse : elle
  * installe la confiance que la version suivante va dépenser.
  */
-export function criblerNormalise(nom: string): Correspondance {
-  const cible = motsTries(nom);
+export function screenNormalised(name: string): Match {
+  const cible = sortedWords(name);
   if (!cible) return null;
-  return LISTE.find((x) => motsTries(x) === cible) ?? null;
+  return WATCHLIST.find((x) => sortedWords(x) === cible) ?? null;
 }
 
 /* ----------------------------------------------------- v3 : approximatif */
@@ -67,22 +67,22 @@ function distance(a: string, b: string): number {
   const m = a.length, n = b.length;
   if (m === 0) return n;
   if (n === 0) return m;
-  let precedent = Array.from({ length: n + 1 }, (_, j) => j);
+  let previous = Array.from({ length: n + 1 }, (_, j) => j);
   for (let i = 1; i <= m; i++) {
-    const courant = [i];
+    const current = [i];
     for (let j = 1; j <= n; j++) {
-      courant[j] = Math.min(
-        precedent[j] + 1,
-        courant[j - 1] + 1,
-        precedent[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
       );
     }
-    precedent = courant;
+    previous = current;
   }
-  return precedent[n];
+  return previous[n];
 }
 
-/** Tolérance en nombre de caractères, proportionnelle à la longueur du nom. */
+/** Tolérance en nombre de caractères, proportionnelle à la longueur du name. */
 export const TOLERANCE = (longueur: number) => Math.max(1, Math.floor(longueur * 0.15));
 
 /**
@@ -92,25 +92,25 @@ export const TOLERANCE = (longueur: number) => Math.max(1, Math.floor(longueur *
  * les noms courts, une tolérance d'un seul caractère suffit à confondre deux personnes
  * distinctes. « Li Wei » et « Li Wen » sont à une lettre l'un de l'autre.
  *
- * Le taux global monte. Des cas qui passaient ne passent plus. C'est exactement ce que
+ * Le rate global monte. Des cas qui passaient ne passent plus. C'est exactement ce que
  * le banc existe pour rendre visible.
  */
-export function criblerApproximatif(nom: string): Correspondance {
-  const cible = motsTries(nom);
+export function screenFuzzy(name: string): Match {
+  const cible = sortedWords(name);
   if (!cible) return null;
 
-  const exact = LISTE.find((x) => motsTries(x) === cible);
+  const exact = WATCHLIST.find((x) => sortedWords(x) === cible);
   if (exact) return exact;
 
-  let meilleur: { nom: string; d: number } | null = null;
-  for (const x of LISTE) {
-    const d = distance(cible, motsTries(x));
-    if (d <= TOLERANCE(Math.max(cible.length, motsTries(x).length)) &&
-        (meilleur === null || d < meilleur.d)) {
-      meilleur = { nom: x, d };
+  let best: { name: string; d: number } | null = null;
+  for (const x of WATCHLIST) {
+    const d = distance(cible, sortedWords(x));
+    if (d <= TOLERANCE(Math.max(cible.length, sortedWords(x).length)) &&
+        (best === null || d < best.d)) {
+      best = { name: x, d };
     }
   }
-  return meilleur?.nom ?? null;
+  return best?.name ?? null;
 }
 
 /* -------------------------------------------- v4 : approximatif sous budget */
@@ -126,36 +126,36 @@ export const BUDGET_MS = 0.04;
  * la ligne. Personne ne considère ça comme un changement de comportement — c'est présenté
  * comme une optimisation.
  *
- * C'en est un pourtant : sous charge, le même nom donne un jour une correspondance et le
- * lendemain aucune. Le banc ne peut plus comparer quoi que ce soit, parce qu'il mesure
+ * C'en est un pourtant : sous payload, le même name donne un jour une correspondance et le
+ * lendemain aucune. Le banc ne peut plus compare quoi que ce soit, parce qu'il mesure
  * l'état de la machine autant que le code. C'est précisément ce que la mesure de
- * stabilité sert à débusquer avant de perdre une semaine sur de fausses régressions.
+ * stabilité sert à débusquer before de perdre une semaine sur de fausses régressions.
  */
-export function criblerSousBudget(nom: string): Correspondance {
-  const cible = motsTries(nom);
+export function screenUnderBudget(name: string): Match {
+  const cible = sortedWords(name);
   if (!cible) return null;
 
-  const exact = LISTE.find((x) => motsTries(x) === cible);
+  const exact = WATCHLIST.find((x) => sortedWords(x) === cible);
   if (exact) return exact;
 
   const debut = performance.now();
-  let meilleur: { nom: string; d: number } | null = null;
-  for (const x of LISTE) {
+  let best: { name: string; d: number } | null = null;
+  for (const x of WATCHLIST) {
     if (performance.now() - debut > BUDGET_MS) return null; // budget épuisé : repli
-    const d = distance(cible, motsTries(x));
-    if (d <= TOLERANCE(Math.max(cible.length, motsTries(x).length)) &&
-        (meilleur === null || d < meilleur.d)) {
-      meilleur = { nom: x, d };
+    const d = distance(cible, sortedWords(x));
+    if (d <= TOLERANCE(Math.max(cible.length, sortedWords(x).length)) &&
+        (best === null || d < best.d)) {
+      best = { name: x, d };
     }
   }
-  return meilleur?.nom ?? null;
+  return best?.name ?? null;
 }
 
 export const VERSIONS = {
-  "v1-exact": criblerExact,
-  "v2-normalise": criblerNormalise,
-  "v3-approximatif": criblerApproximatif,
-  "v4-sous-budget": criblerSousBudget,
+  "v1-exact": screenExact,
+  "v2-normalise": screenNormalised,
+  "v3-approximatif": screenFuzzy,
+  "v4-sous-budget": screenUnderBudget,
 } as const;
 
-export type NomDeVersion = keyof typeof VERSIONS;
+export type VersionName = keyof typeof VERSIONS;
