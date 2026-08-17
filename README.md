@@ -7,6 +7,8 @@ went up **while cases that used to work stopped working**.
 **The finding.** Between two versions of a sanctions screener, the pass rate went **up** — 81.8 % to 86.4 % — while **2 named cases** that had been validated stopped working. On 22 cases the rate difference is inside the noise; the broken cases are not. One of those numbers is an estimate and the other is a fact, and a dashboard renders them identically.
 <!-- /figures:finding -->
 
+**[Try it in your browser →](https://arslanesempai-ui.github.io/regression-bench/)** — run the four versions yourself, then compare any two. The runs are yours and die with the tab.
+
 ![Comparing two versions](images/comparison.png)
 
 ```bash
@@ -231,6 +233,59 @@ know](https://github.com/ArslaneSempai-ui/compliance-document-search), [an onboa
 agent that escalates when it isn't
 confident](https://github.com/ArslaneSempai-ui/kyc-triage-agent), and this — the bench
 that says whether either of them still works.
+
+---
+
+## What this does not let you conclude
+
+**Not "v2 is better than v3."** On 22 cases, 81.8 % against 86.4 % is inside the noise and
+the page says so. What is *not* inside the noise is that two named cases which had been
+validated stopped working. Those are different kinds of statement, and the whole argument
+of this repository is that a dashboard renders them identically.
+
+**Not "fuzzy matching is a mistake."** It bought three typo cases. It paid with two
+distinct people becoming indistinguishable. Whether that trade is worth making is a
+compliance decision, not a technical one — the bench's job is to make sure somebody makes
+it deliberately rather than by watching an average.
+
+**Not "22 cases is enough."** It is enough to catch a named regression, which is all this
+tool claims. It is nowhere near enough to rank two versions by rate, and the interval on
+every rate on the page exists to say so out loud.
+
+**Not "a stable version is a correct one."** Stability measures whether a system gives the
+same answer twice. `v1-exact` is perfectly stable and wrong about most things.
+
+---
+
+## What I would do differently
+
+**Write the flakiness measurement first.** I built the diff, then discovered the fourth
+version's rate moved between runs, then found my own stability sampler could agree by luck
+over five rounds. Determinism is a property you declare about a system, not one you
+sample — and knowing that up front would have saved two corrections.
+
+**Report counts before rates, everywhere, from the start.** Every rate on this page
+eventually grew an interval, and several were withdrawn. Starting from "2 cases broke"
+rather than "the rate moved 4.6 points" would have been right the first time.
+
+**Test the screen, not just the engine.** The stability panel read three fields that do not
+exist on the type it renders. It threw on every measurement in French and printed
+"undefined" in English, and no test noticed because no test opens the page.
+
+---
+
+## What a reviewer can check without running anything
+
+| Claim | Where it is checked |
+|---|---|
+| Every figure on this page | Generated from recorded runs; `npm test` fails if the page drifts |
+| Every rate | Carries its 95 % interval; a non-deterministic version publishes no rate at all |
+| Every case | Carries a written reason, in both languages, enforced by a test |
+| Negative cases | At least 30 % of the set, enforced by a test, so nothing rewards saying yes |
+| The regulation behind it | `31 CFR 501.603(b)(1)`, linked and quoted, guarded by a test |
+| The runs | Named by version, not timestamped — the comparison is reproducible |
+
+---
 
 **Arslane Chaouche Ramdane** — six years in AML/KYC and financial crime operations,
 moving into AI transformation work.
