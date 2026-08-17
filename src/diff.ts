@@ -11,6 +11,7 @@
  * mais en le sachant.
  */
 
+import { pairedVerdict } from "./interval.ts";
 import type { Run, Result } from "./bench.ts";
 
 /** En deçà de cet écart absolu, une variation de durée est du bruit de mesure. */
@@ -41,6 +42,13 @@ export type Comparison = {
   durationBefore: number;
   durationAfter: number;
   verdict: "regression" | "amelioration" | "neutre" | "incomparable";
+  /**
+   * Can this case set tell the two versions apart by rate at all?
+   *
+   * Usually not, and that is the bench's whole argument. Judging by the rate here is
+   * reading noise; the cases that broke are facts either way.
+   */
+  paired: ReturnType<typeof pairedVerdict>;
 };
 
 export function compare(before: Run, after: Run): Comparison {
@@ -77,6 +85,7 @@ export function compare(before: Run, after: Run): Comparison {
     before: before.version, after: after.version,
     regressions, gains, silent, added, removed,
     rateBefore: before.rate, rateAfter: after.rate,
+    paired: pairedVerdict(gains.length, regressions.length),
     durationShift: before.totalDuration === 0 ? 0
       : (after.totalDuration - before.totalDuration) / before.totalDuration,
     durationBefore: before.totalDuration,
@@ -93,41 +102,45 @@ export function compare(before: Run, after: Run): Comparison {
  */
 export function summarise(c: Comparison): string {
   const pc = (x: number) => (x * 100).toFixed(1) + " %";
-  const lignes: string[] = [];
+  const lines: string[] = [];
 
   if (c.verdict === "regression") {
-    lignes.push(`✗ ${c.regressions.length} régression(s) — ${c.before} → ${c.after}`);
+    lines.push(`✗ ${c.regressions.length} regression(s) — ${c.before} -> ${c.after}`);
     for (const r of c.regressions) {
-      lignes.push(`    ${r.caseId} : expected ${JSON.stringify(r.after.expected)}, actual ${JSON.stringify(r.after.actual)}`);
+      lines.push(`    ${r.caseId}: expected ${JSON.stringify(r.after.expected)}, got ${JSON.stringify(r.after.actual)}`);
     }
     if (c.gains.length > 0) {
-      lignes.push(`  (${c.gains.length} gain(s) par ailleurs — le rate passe de ${pc(c.rateBefore)} à ${pc(c.rateAfter)},`);
-      lignes.push(`   ce qui ne rachète pas les cas cassés : ils avaient été validés une fois.)`);
+      lines.push(`  (${c.gains.length} gain(s) elsewhere — the rate moves ${pc(c.rateBefore)} -> ${pc(c.rateAfter)},`);
+      lines.push(`   which does not buy back cases that had been validated once.)`);
     }
   } else if (c.verdict === "amelioration") {
-    lignes.push(`✓ ${c.gains.length} gain(s), aucune régression — ${pc(c.rateBefore)} → ${pc(c.rateAfter)}`);
+    lines.push(`✓ ${c.gains.length} gain(s), no regression — ${pc(c.rateBefore)} -> ${pc(c.rateAfter)}`);
   } else if (c.verdict === "neutre") {
-    lignes.push(`= aucun changement de verdict — ${pc(c.rateAfter)}`);
+    lines.push(`= no verdict changed — ${pc(c.rateAfter)}`);
   } else {
-    lignes.push(`? aucun cas commun entre ${c.before} et ${c.after} : rien à compare`);
+    lines.push(`? no case in common between ${c.before} and ${c.after}: nothing to compare`);
   }
 
+  /*
+   * The rate is usually not the evidence, and saying so is the point of this bench.
+   *
+   * Two runs over the same cases are not independent samples. What can be tested is the
+   * split of the cases that changed verdict, and on a handful of them it is rarely
+   * distinguishable from a coin. The broken cases remain facts either way.
+   */
+  lines.push(`  ${c.paired.note}` +
+    (c.paired.p !== undefined ? ` (${c.paired.discordant} discordant, p = ${c.paired.p.toFixed(3)})` : ""));
+
   if (c.silent.length > 0) {
-    lignes.push(`  ${c.silent.length} cas au verdict inchangé mais à la output différente`);
+    lines.push(`  ${c.silent.length} case(s) with an unchanged verdict but a different output`);
   }
   if (c.added.length > 0 || c.removed.length > 0) {
-    lignes.push(`  jeu modifié : ${c.added.length} ajouté(s), ${c.removed.length} retiré(s) — comparaison partielle`);
+    lines.push(`  case set changed: ${c.added.length} added, ${c.removed.length} removed — partial comparison`);
   }
-  /*
-   * La durée ne se signale qu'en pourcentage ET en absolu.
-   *
-   * La première version annonçait « +1416 % » sur un écart de deux millisecondes. Un
-   * pourcentage calculé sur une base minuscule est du bruit habillé en signal — le
-   * défaut exact que ce projet reproche aux tableaux de bord.
-   */
-  const ecartMs = c.durationAfter - c.durationBefore;
-  if (Math.abs(c.durationShift) > 0.25 && Math.abs(ecartMs) >= DURATION_NOISE_MS) {
-    lignes.push(`  durée ${ecartMs > 0 ? "+" : ""}${ecartMs.toFixed(0)} ms (${c.durationShift > 0 ? "+" : ""}${(c.durationShift * 100).toFixed(0)} %)`);
+
+  const shiftMs = c.durationAfter - c.durationBefore;
+  if (Math.abs(c.durationShift) > 0.25 && Math.abs(shiftMs) >= DURATION_NOISE_MS) {
+    lines.push(`  duration ${shiftMs > 0 ? "+" : ""}${shiftMs.toFixed(0)} ms (${c.durationShift > 0 ? "+" : ""}${(c.durationShift * 100).toFixed(0)} %)`);
   }
-  return lignes.join("\n");
+  return lines.join("\n");
 }

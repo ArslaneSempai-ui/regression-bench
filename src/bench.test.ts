@@ -36,14 +36,14 @@ test("une régression est signalée même quand le rate monte", async () => {
   assert.equal(c.gains.length, 1);
 });
 
-test("le verdict reste « régression » quand les gains dépassent les pertes", async () => {
+test("the verdict stays a regression even when gains outnumber losses", async () => {
   const before = await run("a", (n: number) => (n === 2 ? n * 2 : 0), petitJeu);
   const after = await run("b", (n: number) => (n === 2 ? 0 : n * 2), petitJeu);
 
   const c = compare(before, after);
   assert.ok(c.rateAfter > c.rateBefore, "la moyenne s'améliore");
   assert.equal(c.verdict, "regression", "un cas cassé suffit à rendre le changement suspect");
-  assert.match(summarise(c), /régression/);
+  assert.match(summarise(c), /regression/);
 });
 
 test("deux jeux sans cas commun ne se comparent pas", async () => {

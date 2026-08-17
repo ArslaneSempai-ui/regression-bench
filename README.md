@@ -7,9 +7,9 @@ This one refuses to call that an improvement.
 
 ```
 npm start          # the comparison screen, on localhost:4600
-npm run lancer     # run every version
-npm run comparer -- v2-normalise v3-approximatif
-npm run stabilite  # the same system, several times over
+npm run run-all    # run every version
+npm run compare -- v2-normalise v3-approximatif
+npm run stability  # the same system, several times over
 npm test
 ```
 
@@ -33,12 +33,23 @@ between v2 and v3:
 ![Comparing two versions](images/comparison.png)
 
 ```
-✗ 2 régression(s) — v2-normalise → v3-approximatif
-    court-01 : attendu null, obtenu "Li Wei"
-    court-02 : attendu null, obtenu "Li Wei"
-  (3 gain(s) par ailleurs — le taux passe de 81.8 % à 86.4 %,
-   ce qui ne rachète pas les cas cassés : ils avaient été validés une fois.)
+✗ 2 regression(s) — v2-normalise -> v3-approximatif
+    court-01: expected null, got "Li Wei"
+    court-02: expected null, got "Li Wei"
+  (3 gain(s) elsewhere — the rate moves 81.8 % -> 86.4 %,
+   which does not buy back cases that had been validated once.)
+  the set cannot distinguish these versions by rate — judge the broken
+  cases instead (5 discordant, p = 1.000)
 ```
+
+That last line is the bench proving its own argument. **The rate difference is not
+established by this case set** — 81.8 % carries a 95 % interval of [61–93] and 86.4 %
+one of [67–95], and on the five cases that actually changed verdict the split is
+indistinguishable from a coin. Anyone reading 86.4 % as "better" is reading noise.
+
+The two broken cases are not noise. They are two named inputs where a system that once
+told two people apart no longer does. That asymmetry — a rate you cannot trust beside
+facts you can — is the entire reason this tool reports movements rather than scores.
 
 Fuzzy matching bought three typo cases and paid with **two distinct people now
 indistinguishable**. On a short name, one character of tolerance is one character too
@@ -57,7 +68,7 @@ can't be compared; a run can. That's the whole difference between "we're at 80 %
 "these seven cases stopped working".
 
 **Refuses to grade on the average.** Any regression makes the change suspect, whatever the
-rate did. A human can override that — but knowingly. `npm run comparer` exits non-zero on
+rate did. A human can override that — but knowingly. `npm run compare` exits non-zero on
 a regression, so continuous integration can block on it. A report nobody opens is not a
 control.
 
@@ -68,10 +79,10 @@ falls back to exact matching when the budget runs out. It ships as an *optimisat
 Running the same cases eight times:
 
 ```
-v4-sous-budget     4 cas instable(s)
-    faute-01 : 7/8 — sorties observées : null, "Amina Haddad"
-    faute-02 : 7/8 — sorties observées : null, "Olga Petrova"
-    court-02 : 1/8 — sorties observées : "Li Wei", null
+v4-sous-budget     4 unstable case(s)
+    faute-01 : 7/8 — outputs seen: null, "Amina Haddad"
+    faute-02 : 7/8 — outputs seen: null, "Olga Petrova"
+    court-02 : 1/8 — outputs seen: "Li Wei", null
 ```
 
 Under load, the same customer is screened differently. Every later comparison would report
@@ -108,12 +119,13 @@ only contains problems already solved tells you nothing about the ones ahead.
 
 ```
 src/
-  banc.ts        the harness: cases, runs, persistence
+  bench.ts       the harness: cases, runs, persistence
   diff.ts        run comparison, the verdict, the regression rule
-  stabilite.ts   the same system N times over, flakiness detection
-  criblage.ts    the system under test — four versions of name screening
-  jeu.ts         the 22 check cases, each with its reason for existing
-  serveur.ts + ui.html   one screen, French or English
+  interval.ts    Wilson intervals, and whether two versions are separable at all
+  stability.ts   the same system N times over, flakiness detection
+  screening.ts   the system under test — four versions of name screening
+  cases.ts       the 22 check cases, each with its reason for existing
+  server.ts + ui.html    one screen, French or English
 ```
 
 Node 26 with native TypeScript, `node:test`, no build step, no dependencies.
@@ -138,9 +150,11 @@ The watchlist and every name in it are fictional.
 
 - **No LLM adapters shipped.** The harness takes any function; wiring a model to it is a
   few lines, but nothing here pretends to have measured one.
-- **No statistical significance.** With twenty-two deterministic cases there's nothing to
-  infer. On a sampled or non-deterministic system that question becomes real, and this
-  bench doesn't answer it yet.
+- **Small samples, and it says so.** Twenty-two cases put a ±14 point interval on any
+  rate quoted here. The bench reports that interval rather than hiding it, and refuses to
+  call a rate difference an improvement when the case set cannot support the claim. What
+  it does *not* do is tell you how many cases you would need — that depends on the effect
+  you care about, and inventing a number would be the same failing again.
 - **No cost tracking.** Duration is recorded; tokens and money are not.
 
 ---
