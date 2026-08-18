@@ -12,7 +12,7 @@
     "typage": "tsc --noEmit",
     "test": "tsc --noEmit && node src/readme.ts --check && node --test src/*.test.ts",
     "figures": "node src/readme.ts",
-    "pages": "tsc -p tsconfig.web.json && node src/pages.ts",
+    "pages": "tsc -p tsconfig.web.json && node src/pages.ts && node src/verifier-ecran.mjs . 1",
     "figer": "node src/figer-stabilite.ts",
     "captures": "node src/capturer.mjs ."
   },
