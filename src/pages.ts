@@ -31,6 +31,17 @@ const summary = () => runs().map((e) => ({
   version: e.version, le: e.le, passed: e.passed, total: e.total, rate: e.rate,
 }));
 
+/* Le résultat de chaque cas, version par version — la grille de l'écran. Le serveur le
+ * calcule aussi ; il est ici parce que la démo n'a pas de serveur, et qu'un champ oublié
+ * ne casse rien : il laisse une section vide en ligne, pendant des semaines. */
+const grille = () => ({
+  cas: CASES.map((c) => c.id),
+  versions: runs().map((e) => ({
+    version: e.version,
+    passes: CASES.map((c) => e.results.find((r) => r.caseId === c.id)?.passed ?? null),
+  })),
+});
+
 async function runAll() {
   for (const [name, system] of Object.entries(VERSIONS)) save(await run(name, system, CASES));
 }
@@ -39,7 +50,7 @@ async function runAll() {
  * versions is the first thing the screen asks for, and doing it silently on load would
  * hide the step the tool is about. */
 window.LOCAL = async (chemin, methode) => {
-  if (chemin === "/api/state") return { runs: summary(), cases: byCase, totalCases: CASES.length };
+  if (chemin === "/api/state") return { runs: summary(), cases: byCase, totalCases: CASES.length, grille: grille() };
   if (chemin === "/api/run") { await runAll(); return { runs: summary() }; }
 
   if (chemin.startsWith("/api/compare")) {

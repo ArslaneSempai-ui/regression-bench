@@ -44,6 +44,17 @@ const summary = () => runs().map((e) => ({
   version: e.version, le: e.le, passed: e.passed, total: e.total, rate: e.rate,
 }));
 
+/* Le résultat de chaque cas, version par version — la grille de l'écran. Le serveur le
+ * calcule aussi ; il est ici parce que la démo n'a pas de serveur, et qu'un champ oublié
+ * ne casse rien : il laisse une section vide en ligne, pendant des semaines. */
+const grille = () => ({
+  cas: CASES.map((c) => c.id),
+  versions: runs().map((e) => ({
+    version: e.version,
+    passes: CASES.map((c) => e.results.find((r) => r.caseId === c.id)?.passed ?? null),
+  })),
+});
+
 async function runAll() {
   for (const [name, system] of Object.entries(VERSIONS)) save(await run(name, system, CASES));
 }
@@ -52,7 +63,7 @@ async function runAll() {
  * versions is the first thing the screen asks for, and doing it silently on load would
  * hide the step the tool is about. */
 window.LOCAL = async (chemin, methode) => {
-  if (chemin === "/api/state") return { runs: summary(), cases: byCase, totalCases: CASES.length };
+  if (chemin === "/api/state") return { runs: summary(), cases: byCase, totalCases: CASES.length, grille: grille() };
   if (chemin === "/api/run") { await runAll(); return { runs: summary() }; }
 
   if (chemin.startsWith("/api/compare")) {
@@ -75,7 +86,7 @@ window.LOCAL = async (chemin, methode) => {
 };
 </script>
 <script type="module">
-import { empile } from "./graphes.js";
+import { empile, grille, brancher as brancherFigures } from "./graphes.js";
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 /*
@@ -129,6 +140,14 @@ const T = {
     figDiffTitre: "Avant, après",
     figDiffAria: "Deux barres empilées : les cas réussis et échoués de la version d'avant, puis de celle d'après.",
     segReussis: "réussis", segEchoues: "échoués",
+    figGrilleTitre: (n, v) => `${n} cas × ${v} versions — un trou dans une colonne est une régression`,
+    figGrilleAria: "Grille des cas par version. Chaque colonne est un cas, chaque ligne une version. "
+      + "Une case vide entourée de rouge est un cas qui passait à la version précédente et ne passe plus.",
+    grilleOk: "passe", grilleKo: "échoue déjà",
+    grilleCasse: "cassé par cette version", grilleRepare: "réparé par cette version",
+    grilleSuite: (v, repare, casse) => `<b>${v}</b> répare ${repare} cas et en casse ${casse}`
+      + " — pendant que son taux monte. Aucun taux ne dit ça ; la grille le dit sans commentaire.",
+    grilleRien: "Aucune version ne casse un cas que la précédente réussissait.",
     lancerStabilite: "Mesurer sur 8 tours",
     stable: "stable",
     instable: (n, c, tours) => `${n} — ${c.caseId} : ${c.passes}/${tours}, sorties observées : ${c.outputs.join(" / ")}`,
@@ -168,6 +187,14 @@ const T = {
     figDiffTitre: "Before, after",
     figDiffAria: "Two stacked bars: passed and failed cases of the before version, then of the after one.",
     segReussis: "passed", segEchoues: "failed",
+    figGrilleTitre: (n, v) => `${n} cases × ${v} versions — a hole in a column is a regression`,
+    figGrilleAria: "Grid of cases by version. Each column is a case, each row a version. "
+      + "An empty cell outlined in red is a case that passed on the previous version and no longer does.",
+    grilleOk: "passes", grilleKo: "already failing",
+    grilleCasse: "broken by this version", grilleRepare: "fixed by this version",
+    grilleSuite: (v, repare, casse) => `<b>${v}</b> fixes ${repare} cases and breaks ${casse}`
+      + " — while its rate goes up. No rate says that; the grid says it without a word.",
+    grilleRien: "No version breaks a case the previous one passed.",
     lancerStabilite: "Measure over 8 runs",
     stable: "stable",
     instable: (n, c, runs) => `${n} — ${c.caseId}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
@@ -187,6 +214,42 @@ let choixAvant = null, choixApres = null;
 function blocVersions() {
   const L = t();
   $("#titreVersions").textContent = L.titreVersions;
+
+  /*
+   * Les vingt-deux cas, version par version.
+   *
+   * Les barres au-dessus disent le taux, et le taux est exactement ce que cet outil
+   * accuse : il monte pendant qu'un cas casse. La grille met les deux dans la même image —
+   * la barre s'allonge, et deux trous apparaissent dans les colonnes.
+   */
+  const g = state.grille;
+  const figGrille = grille({
+    colonnes: g.cas,
+    lignes: g.versions.map((v, i) => ({
+      nom: v.version,
+      cellules: v.passes,
+      bout: `${v.passes.filter(Boolean).length}/${g.cas.length}`,
+    })),
+    legende: [
+      { texte: L.grilleOk, etat: "ok" }, { texte: L.grilleKo, etat: "ko" },
+      { texte: L.grilleCasse, etat: "casse" }, { texte: L.grilleRepare, etat: "repare" },
+    ],
+    aria: L.figGrilleAria,
+  });
+
+  /* La phrase nomme la version qui casse le plus, sans la choisir à la main. */
+  const bilans = g.versions.slice(1).map((v, i) => {
+    const avant = g.versions[i].passes;
+    return {
+      version: v.version,
+      repare: v.passes.filter((p, j) => p && avant[j] === false).length,
+      casse: v.passes.filter((p, j) => p === false && avant[j] === true).length,
+    };
+  });
+  const pire = bilans.slice().sort((a, b) => b.casse - a.casse)[0];
+  const suiteGrille = pire && pire.casse > 0
+    ? L.grilleSuite(esc(pire.version), pire.repare, pire.casse)
+    : L.grilleRien;
   $("#versions").innerHTML = `
     <div class="feuillet"><div class="quoi">${esc(L.versionsQuoi(state.totalCases))}</div>
       <div class="rang"><button class="b" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
@@ -202,7 +265,13 @@ function blocVersions() {
         fmt: (v) => String(Math.round(v)),
         aria: L.figVersionsAria,
       })}
+
+      <div class="titre-fig">${esc(L.figGrilleTitre(state.totalCases, state.runs.length))}</div>
+      ${figGrille}
+      <div class="suite">${suiteGrille}</div>
     </div></section>`;
+
+  brancherFigures($("#versions"));
   $("#relancer").onclick = async () => {
     await agir(async () => { const r = await api("/api/run", "POST"); state.runs = r.runs; await charger(); });
   };

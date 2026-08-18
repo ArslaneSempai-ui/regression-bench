@@ -61,6 +61,22 @@ const serveur = createServer(async (req, res) => {
         })),
         cases: byCase,
         totalCases: CASES.length,
+        /*
+         * Le résultat de chaque cas, version par version.
+         *
+         * La thèse de cet outil est qu'un taux qui monte peut cacher un cas qui vient de
+         * casser — et jusqu'ici il l'affichait sous forme de taux, en demandant au lecteur
+         * de cliquer « comparer » et de lire une liste pour trouver la casse. Les taux ne
+         * suffisent pas à la dessiner : il faut les cas eux-mêmes. Vingt-deux booléens par
+         * version, c'est le prix de la démonstration.
+         */
+        grille: {
+          cas: CASES.map((c) => c.id),
+          versions: runs().map((e) => ({
+            version: e.version,
+            passes: CASES.map((c) => e.results.find((r) => r.caseId === c.id)?.passed ?? null),
+          })),
+        },
       });
     }
 
