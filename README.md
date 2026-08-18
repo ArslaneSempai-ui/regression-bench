@@ -175,7 +175,7 @@ went up**, and that is a fact about the runs rather than an estimate from them. 
 weaken when you learn the case set is <!--p:banc.cas-->22<!--/p--> hand-written names: "these two regressed" is true
 of any <!--p:banc.cas-->22<!--/p--> cases you care to pick.
 
-The rates are the opposite, and the bench says so on its own page — <!--p:banc.tauxAvant|pc-->81.8 %<!--/p--> against <!--p:banc.tauxApres|pc-->86.4 %<!--/p-->
+The rates are the opposite, and the bench says so on its own page — <!--p:banc.tauxAvant~pc-->81.8 %<!--/p--> against <!--p:banc.tauxApres~pc-->86.4 %<!--/p-->
 on <!--p:banc.cas-->22<!--/p--> cases is ±<!--p:banc.demiIntervalle-->14<!--/p--> points of interval, which is not a difference this set can establish.
 
 Facts you can trust beside a rate you cannot. That asymmetry is the entire argument for
@@ -238,7 +238,7 @@ that says whether either of them still works.
 
 ## What this does not let you conclude
 
-**Not "v2 is better than v3."** On <!--p:banc.cas-->22<!--/p--> cases, <!--p:banc.tauxAvant|pc-->81.8 %<!--/p--> against <!--p:banc.tauxApres|pc-->86.4 %<!--/p--> is inside the noise and
+**Not "v2 is better than v3."** On <!--p:banc.cas-->22<!--/p--> cases, <!--p:banc.tauxAvant~pc-->81.8 %<!--/p--> against <!--p:banc.tauxApres~pc-->86.4 %<!--/p--> is inside the noise and
 the page says so. What is *not* inside the noise is that two named cases which had been
 validated stopped working. Those are different kinds of statement, and the whole argument
 of this repository is that a dashboard renders them identically.
