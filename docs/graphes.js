@@ -802,8 +802,16 @@ export function populations({ groupes, seuil, fmtX = String, motRecouvrement, ar
 
   const marques = [x0, ...(seuil && fini(seuil.v) ? [seuil.v] : []), x1];
   for (const v of marques) {
+    if (seuil && fini(seuil.v) && v !== seuil.v && Math.abs(px(v) - px(seuil.v)) < 40) continue;
     const ancrage = v === x0 ? "start" : v === x1 ? "end" : "middle";
     svg += `<text class="grad" x="${px(v)}" y="${sol + 16}" text-anchor="${ancrage}">${ech(fmtX(v))}</text>`;
+  }
+
+  /* La prise, en dernier pour être au-dessus : la barre s'attrape n'importe où entre les
+   * deux populations qu'elle sépare, pas sur son trait. */
+  if (seuil?.saisissable && fini(seuil.v)) {
+    svg += `<rect class="carte-prise" x="${M.gauche}" y="${M.haut}" width="${arr(L - M.gauche - M.droite)}"
+      height="${arr(sol + 6 - M.haut)}" data-x0="${x0}" data-x1="${x1}" data-y0="0" data-y1="1" />`;
   }
 
   return cadre(svg, hauteur, aria) + "</figure>";
