@@ -22,6 +22,7 @@ const root = new URL("..", import.meta.url).pathname;
 const SHIM = `<script type="module">
 import { run, save, load, runs } from "./js/bench.js";
 import { CASES } from "./js/cases.js";
+import { REFERENCE_STABILITE } from "./js/reference-stabilite.js";
 import { VERSIONS } from "./js/screening.js";
 import { compare } from "./js/diff.js";
 import { measureStability } from "./js/stability.js";
@@ -36,6 +37,7 @@ const summary = () => runs().map((e) => ({
  * ne casse rien : il laisse une section vide en ligne, pendant des semaines. */
 const grille = () => ({
   cas: CASES.map((c) => c.id),
+  reference: REFERENCE_STABILITE,
   versions: runs().map((e) => ({
     version: e.version,
     passes: CASES.map((c) => e.results.find((r) => r.caseId === c.id)?.passed ?? null),

@@ -81,7 +81,8 @@ const T = {
     figDiffTitre: "Avant, après",
     figDiffAria: "Deux barres empilées : les cas réussis et échoués de la version d'avant, puis de celle d'après.",
     segReussis: "réussis", segEchoues: "échoués",
-    figGrilleTitre: (n, v) => `${n} cas × ${v} versions, sur 8 tours — un trou dans une colonne est une régression`,
+    figGrilleTitre: (n, v) => `${n} cas × ${v} versions — un trou dans une colonne est une régression`,
+    mesureeLe: (d, t) => `Mesuré le ${d} sur ${t} tours, et livré avec la page : une des versions court après une horloge, donc rejouer la mesure ne donne pas deux fois le même résultat.`,
     figGrilleAria: "Grille des cas par version. Chaque colonne est un cas, chaque ligne une version. "
       + "Une case vide entourée de rouge est un cas qui passait à la version précédente et ne passe plus.",
     grilleOk: "passe", grilleKo: "échoue déjà",
@@ -129,7 +130,8 @@ const T = {
     figDiffTitre: "Before, after",
     figDiffAria: "Two stacked bars: passed and failed cases of the before version, then of the after one.",
     segReussis: "passed", segEchoues: "failed",
-    figGrilleTitre: (n, v) => `${n} cases × ${v} versions, over 8 rounds — a hole in a column is a regression`,
+    figGrilleTitre: (n, v) => `${n} cases × ${v} versions — a hole in a column is a regression`,
+    mesureeLe: (d, t) => `Measured on ${d} over ${t} rounds and shipped with the page: one version races a clock, so re-running the measurement does not give the same answer twice.`,
     figGrilleAria: "Grid of cases by version. Each column is a case, each row a version. "
       + "An empty cell outlined in red is a case that passed on the previous version and no longer does.",
     grilleOk: "passes", grilleKo: "already failing",
@@ -178,7 +180,8 @@ function blocVersions() {
    * Les barres au-dessus restent une exécution simple, et c'est assumé : elles montrent le
    * taux qu'on lit d'habitude, celui-là même qui cache la casse.
    */
-  const mesureDe = (version) => stabilite?.versions.find((v) => v.version === version) ?? null;
+  const ref = stabiliteReference();
+  const mesureDe = (version) => ref?.versions.find((v) => v.version === version) ?? null;
   const figGrille = grille({
     colonnes: g.cas,
     lignes: g.versions.map((v) => {
@@ -197,7 +200,7 @@ function blocVersions() {
     legende: [
       { texte: L.grilleOk, etat: "ok" }, { texte: L.grilleKo, etat: "ko" },
       { texte: L.grilleCasse, etat: "casse" }, { texte: L.grilleRepare, etat: "repare" },
-      ...(stabilite?.versions.some((v) => !v.stable) ? [{ texte: L.grilleInstable, etat: "instable" }] : []),
+      ...(ref?.versions.some((v) => !v.stable) ? [{ texte: L.grilleInstable, etat: "instable" }] : []),
     ],
     aria: L.figGrilleAria,
   });
@@ -360,12 +363,18 @@ function blocStabilite() {
   let html = `<div class="feuillet"><div class="quoi">${esc(L.stabiliteQuoi)}</div>
     <div class="rang"><button class="b" id="stab" type="button">${esc(L.lancerStabilite)}</button></div></div>`;
 
-  if (stabilite) {
-    const unstable = stabilite.versions.filter((v) => !v.stable);
+  /* La référence tant que le visiteur n'a rien relancé : « pas encore mesuré » était faux,
+   * la mesure est dans le dépôt. */
+  const m = stabilite ?? stabiliteReference();
+  if (m) {
+    const unstable = m.versions.filter((v) => !v.stable);
     html += unstable.length === 0
       ? `<div class="vide">${esc(L.toutStable)}</div>`
       : unstable.flatMap((v) => v.unstable.map((c) =>
-          `<div class="renvoi attention">${esc(L.instable(v.version, c, stabilite.runs))}</div>`)).join("");
+          `<div class="renvoi attention">${esc(L.instable(v.version, c, m.runs))}</div>`)).join("");
+    if (!stabilite && m.mesureLe) {
+      html += `<div class="renvoi">${esc(L.mesureeLe(new Date(m.mesureLe).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-GB"), m.runs))}</div>`;
+    }
   } else {
     html += `<div class="vide">${esc(L.aucuneMesure)}</div>`;
   }
@@ -396,19 +405,39 @@ async function agir(travail) {
   }
 }
 
+async function charger() { state = await api("/api/state"); }
+
 /*
- * L'état et la stabilité, ensemble.
+ * La stabilité de référence : mesurée une fois, livrée avec le build.
  *
- * La stabilité était derrière un bouton, donc invisible pour qui ne clique pas — et la
- * grille au-dessus marquait « cassé par cette version » un cas qui est seulement instable,
- * une visite sur huit. Or les deux mesures coûtent la même chose : trois millisecondes
- * pour quatre exécutions, cinq pour huit tours sur quatre versions. Il n'y avait rien à
- * arbitrer. Une seule mesure, deux endroits, aucun clic.
+ * Elle a d'abord été mesurée au chargement, huit tours, ce qui coûtait cinq millisecondes
+ * — et le chiffre bougeait quand même d'une visite à l'autre. La raison n'est pas la
+ * taille de l'échantillon : `v4-sous-budget` court après une horloge, donc son taux de
+ * réussite dépend de la charge de la machine. Mesuré : sur huit cent tours répétés,
+ * `faute-01` est passé de 95,50 % à 99,88 % de réussite, très au-delà du bruit
+ * d'échantillonnage. Il n'existe pas de nombre de tours qui fige ça.
+ *
+ * Alors on fige par la mesure, comme le reste du portfolio : quatre cents tours, une fois,
+ * datés, écrits dans le dépôt. La grille lit ça et montre la même chose à chaque visite.
+ * Le bouton en dessous rejoue une mesure en direct — et voir l'ensemble bouger est
+ * précisément ce que ce banc a à dire.
  */
-async function charger() {
-  state = await api("/api/state");
-  stabilite = await api("/api/stability?runs=8", "POST");
-}
+const stabiliteReference = () => {
+  const r = state?.grille?.reference;
+  if (!r) return null;
+  return {
+    runs: r.tours,
+    mesureLe: r.mesureLe,
+    versions: Object.entries(r.versions).map(([version, parCas]) => {
+      const unstable = Object.entries(parCas)
+        .filter(([, n]) => n !== 0 && n !== r.tours)
+        .map(([caseId, n]) => ({ caseId, passes: n, rounds: r.tours, outputs: [] }));
+      /* `passesParCas` est ce que la grille lit pour chaque case : l'oublier ici rendait
+       * toute la grille vide, avec des compteurs à 0/22 — et rien ne levait d'erreur. */
+      return { version, rounds: r.tours, unstable, stable: unstable.length === 0, passesParCas: parCas };
+    }),
+  };
+};
 
 for (const l of ["fr", "en"]) {
   $(`#${l}`).onclick = () => { langue = l; localStorage.setItem("langue", l); dessiner(); };

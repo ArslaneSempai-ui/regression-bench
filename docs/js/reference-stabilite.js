@@ -1,0 +1,110 @@
+/*
+ * Mesuré une fois, pas rejoué à chaque visite. Régénérer avec `npm run figer`.
+ *
+ * Pourquoi ce fichier existe plutôt qu'une mesure au chargement : voir figer-stabilite.ts.
+ * En deux mots — une des versions court après une horloge, donc son verdict dépend de la
+ * charge de la machine et aucun nombre de tours ne le fige.
+ */
+/** Combien de tours chaque cas a réussi, par version. */
+export const REFERENCE_STABILITE = {
+    "mesureLe": "2026-08-18T10:51:38.876Z",
+    "tours": 400,
+    "versions": {
+        "v1-exact": {
+            "exact-01": 400,
+            "exact-02": 400,
+            "casse-01": 0,
+            "accent-01": 0,
+            "espaces-01": 0,
+            "ordre-01": 0,
+            "ordre-02": 0,
+            "faute-01": 0,
+            "faute-02": 0,
+            "faute-03": 0,
+            "negatif-01": 400,
+            "negatif-02": 400,
+            "negatif-03": 400,
+            "negatif-04": 400,
+            "negatif-05": 400,
+            "court-01": 400,
+            "court-02": 400,
+            "court-03": 400,
+            "court-04": 400,
+            "societe-01": 400,
+            "societe-02": 0,
+            "societe-03": 400
+        },
+        "v2-normalise": {
+            "exact-01": 400,
+            "exact-02": 400,
+            "casse-01": 400,
+            "accent-01": 0,
+            "espaces-01": 400,
+            "ordre-01": 400,
+            "ordre-02": 400,
+            "faute-01": 0,
+            "faute-02": 0,
+            "faute-03": 0,
+            "negatif-01": 400,
+            "negatif-02": 400,
+            "negatif-03": 400,
+            "negatif-04": 400,
+            "negatif-05": 400,
+            "court-01": 400,
+            "court-02": 400,
+            "court-03": 400,
+            "court-04": 400,
+            "societe-01": 400,
+            "societe-02": 400,
+            "societe-03": 400
+        },
+        "v3-approximatif": {
+            "exact-01": 400,
+            "exact-02": 400,
+            "casse-01": 400,
+            "accent-01": 0,
+            "espaces-01": 400,
+            "ordre-01": 400,
+            "ordre-02": 400,
+            "faute-01": 400,
+            "faute-02": 400,
+            "faute-03": 400,
+            "negatif-01": 400,
+            "negatif-02": 400,
+            "negatif-03": 400,
+            "negatif-04": 400,
+            "negatif-05": 400,
+            "court-01": 0,
+            "court-02": 0,
+            "court-03": 400,
+            "court-04": 400,
+            "societe-01": 400,
+            "societe-02": 400,
+            "societe-03": 400
+        },
+        "v4-sous-budget": {
+            "exact-01": 400,
+            "exact-02": 400,
+            "casse-01": 400,
+            "accent-01": 0,
+            "espaces-01": 400,
+            "ordre-01": 400,
+            "ordre-02": 400,
+            "faute-01": 380,
+            "faute-02": 388,
+            "faute-03": 374,
+            "negatif-01": 400,
+            "negatif-02": 400,
+            "negatif-03": 400,
+            "negatif-04": 400,
+            "negatif-05": 400,
+            "court-01": 0,
+            "court-02": 8,
+            "court-03": 400,
+            "court-04": 400,
+            "societe-01": 400,
+            "societe-02": 400,
+            "societe-03": 400
+        }
+    }
+};

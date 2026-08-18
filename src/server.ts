@@ -6,6 +6,7 @@ import { compare } from "./diff.ts";
 import { measureStability } from "./stability.ts";
 import { runAll } from "./run.ts";
 import { VERSIONS } from "./screening.ts";
+import { REFERENCE_STABILITE } from "./reference-stabilite.ts";
 import { CASES } from "./cases.ts";
 
 /* Runs persist to disk when the bench is driven from Node; the browser build keeps
@@ -72,6 +73,10 @@ const serveur = createServer(async (req, res) => {
          */
         grille: {
           cas: CASES.map((c) => c.id),
+          /* La grille se lit sur une mesure datée, pas sur l'exécution du moment : une des
+           * versions court après une horloge, et aucun nombre de tours ne fige son verdict.
+           * Voir figer-stabilite.ts. */
+          reference: REFERENCE_STABILITE,
           versions: runs().map((e) => ({
             version: e.version,
             passes: CASES.map((c) => e.results.find((r) => r.caseId === c.id)?.passed ?? null),

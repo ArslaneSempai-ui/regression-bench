@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "types": []
   },
-  "files": ["src/bench.ts", "src/cases.ts", "src/screening.ts", "src/diff.ts", "src/stability.ts", "src/interval.ts", "src/regulations.ts"]
+  "files": ["src/bench.ts", "src/cases.ts", "src/screening.ts", "src/diff.ts", "src/stability.ts", "src/reference-stabilite.ts", "src/interval.ts", "src/regulations.ts"]
 }
