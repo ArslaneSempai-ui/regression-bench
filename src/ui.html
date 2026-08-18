@@ -82,6 +82,7 @@ const T = {
     figDiffAria: "Deux barres empilées : les cas réussis et échoués de la version d'avant, puis de celle d'après.",
     segReussis: "réussis", segEchoues: "échoués",
     figGrilleTitre: (n, v) => `${n} cas × ${v} versions — un trou dans une colonne est une régression`,
+    etendue: (a, b) => `${a} – ${b}`,
     mesureeLe: (d, t) => `Mesuré le ${d} sur ${t} tours, et livré avec la page : une des versions court après une horloge, donc rejouer la mesure ne donne pas deux fois le même résultat.`,
     figGrilleAria: "Grille des cas par version. Chaque colonne est un cas, chaque ligne une version. "
       + "Une case vide entourée de rouge est un cas qui passait à la version précédente et ne passe plus.",
@@ -131,6 +132,7 @@ const T = {
     figDiffAria: "Two stacked bars: passed and failed cases of the before version, then of the after one.",
     segReussis: "passed", segEchoues: "failed",
     figGrilleTitre: (n, v) => `${n} cases × ${v} versions — a hole in a column is a regression`,
+    etendue: (a, b) => `${a} – ${b}`,
     mesureeLe: (d, t) => `Measured on ${d} over ${t} rounds and shipped with the page: one version races a clock, so re-running the measurement does not give the same answer twice.`,
     figGrilleAria: "Grid of cases by version. Each column is a case, each row a version. "
       + "An empty cell outlined in red is a case that passed on the previous version and no longer does.",
@@ -236,11 +238,24 @@ function blocVersions() {
       <div class="titre-fig">${esc(L.figVersionsTitre)}</div>
       ${empile({
         /* Le total est le même pour les quatre versions : c'est le taux qu'on vient lire,
-         * et il remplace la liste de lignes qui répétait la figure mot pour mot. */
-        items: state.runs.map((e) => ({ nom: e.version, bout: pc(e.rate), parts: [
-          { nom: L.segReussis, valeur: e.passed, ton: "accent" },
-          { nom: L.segEchoues, valeur: e.total - e.passed, ton: "neutre" },
-        ] })),
+         * et il remplace la liste de lignes qui répétait la figure mot pour mot.
+         *
+         * Sur une version qui n'est pas déterministe, ce taux est un tirage : la quatrième
+         * barre affichait 81,8 %, 86,4 %, 90,9 % ou 95,5 % selon la visite, sans que rien
+         * ne le dise. Ce dépôt s'interdit déjà d'annoncer un taux sans son intervalle —
+         * un test le tient sur le README — et l'écran s'en dispensait. Elle porte donc
+         * maintenant l'étendue observée sur les quatre cents tours de référence, et la
+         * barre est dessinée sur la moyenne. */
+        items: state.runs.map((e) => {
+          const t = mesureDe(e.version)?.taux;
+          const varie = t && t.haut - t.bas > 0.0001;
+          const taux = varie ? t.moyen : e.rate;
+          const passes = Math.round(taux * e.total);
+          return { nom: e.version, bout: varie ? L.etendue(pc(t.bas), pc(t.haut)) : pc(e.rate), parts: [
+            { nom: L.segReussis, valeur: passes, ton: "accent" },
+            { nom: L.segEchoues, valeur: e.total - passes, ton: "neutre" },
+          ] };
+        }),
         fmt: (v) => String(Math.round(v)),
         aria: L.figVersionsAria,
       })}
@@ -428,13 +443,14 @@ const stabiliteReference = () => {
   return {
     runs: r.tours,
     mesureLe: r.mesureLe,
-    versions: Object.entries(r.versions).map(([version, parCas]) => {
+    versions: Object.entries(r.versions).map(([version, d]) => {
+      const parCas = d.passesParCas;
       const unstable = Object.entries(parCas)
         .filter(([, n]) => n !== 0 && n !== r.tours)
         .map(([caseId, n]) => ({ caseId, passes: n, rounds: r.tours, outputs: [] }));
       /* `passesParCas` est ce que la grille lit pour chaque case : l'oublier ici rendait
        * toute la grille vide, avec des compteurs à 0/22 — et rien ne levait d'erreur. */
-      return { version, rounds: r.tours, unstable, stable: unstable.length === 0, passesParCas: parCas };
+      return { version, rounds: r.tours, unstable, stable: unstable.length === 0, passesParCas: parCas, taux: d.taux };
     }),
   };
 };

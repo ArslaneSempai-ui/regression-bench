@@ -18,8 +18,10 @@ import { CASES } from "./cases.js";
 export async function measureStability(version, system, cases, rounds = 5, judge) {
     const passes = new Map();
     const outputs = new Map();
+    const tauxParTour = [];
     for (let i = 0; i < rounds; i++) {
         const e = await run(version, system, cases, judge);
+        tauxParTour.push(e.rate);
         for (const r of e.results) {
             passes.set(r.caseId, (passes.get(r.caseId) ?? 0) + (r.passed ? 1 : 0));
             if (!outputs.has(r.caseId))
@@ -37,6 +39,7 @@ export async function measureStability(version, system, cases, rounds = 5, judge
     return {
         version, rounds, unstable, stable: unstable.length === 0,
         passesParCas: Object.fromEntries(passes),
+        tauxParTour,
     };
 }
 if (isMain(import.meta)) {

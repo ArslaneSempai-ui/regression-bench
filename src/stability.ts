@@ -42,6 +42,15 @@ export type Stability = {
    * tirages.
    */
   passesParCas: Record<string, number>;
+  /**
+   * Le taux de réussite de chaque tour.
+   *
+   * Sur un système non déterministe, « 90,9 % » est un tirage, pas une mesure. Ce dépôt
+   * s'interdit déjà d'annoncer un taux sans son intervalle — un test le tient — et l'écran
+   * le faisait quand même, en affichant le taux d'une exécution unique. Garder les tours
+   * permet d'écrire l'étendue observée à la place du point.
+   */
+  tauxParTour: number[];
 };
 
 export async function measureStability<E, S>(
@@ -54,8 +63,10 @@ export async function measureStability<E, S>(
   const passes = new Map<string, number>();
   const outputs = new Map<string, Set<string>>();
 
+  const tauxParTour: number[] = [];
   for (let i = 0; i < rounds; i++) {
     const e = await run(version, system, cases, judge);
+    tauxParTour.push(e.rate);
     for (const r of e.results) {
       passes.set(r.caseId, (passes.get(r.caseId) ?? 0) + (r.passed ? 1 : 0));
       if (!outputs.has(r.caseId)) outputs.set(r.caseId, new Set());
@@ -74,6 +85,7 @@ export async function measureStability<E, S>(
   return {
     version, rounds, unstable, stable: unstable.length === 0,
     passesParCas: Object.fromEntries(passes),
+    tauxParTour,
   };
 }
 

@@ -31,9 +31,19 @@ import { isMain, arg } from "./cli.ts";
 const CIBLE = new URL("./reference-stabilite.ts", import.meta.url).pathname;
 
 export async function figer(tours: number): Promise<string> {
-  const versions: Record<string, Record<string, number>> = {};
+  const versions: Record<string, { passesParCas: Record<string, number>; taux: { bas: number; haut: number; moyen: number } }> = {};
   for (const [nom, systeme] of Object.entries(VERSIONS)) {
-    versions[nom] = (await measureStability(nom, systeme, CASES, tours)).passesParCas;
+    const m = await measureStability(nom, systeme, CASES, tours);
+    /* L'étendue observée, pas seulement la moyenne : sur une version qui court après une
+     * horloge, c'est l'étendue qui est le résultat. */
+    versions[nom] = {
+      passesParCas: m.passesParCas,
+      taux: {
+        bas: Math.min(...m.tauxParTour),
+        haut: Math.max(...m.tauxParTour),
+        moyen: m.tauxParTour.reduce((a, b) => a + b, 0) / m.tauxParTour.length,
+      },
+    };
   }
   return `/*
  * Mesuré une fois, pas rejoué à chaque visite. Régénérer avec \`npm run figer\`.
@@ -43,7 +53,7 @@ export async function figer(tours: number): Promise<string> {
  * charge de la machine et aucun nombre de tours ne le fige.
  */
 
-/** Combien de tours chaque cas a réussi, par version. */
+/** Combien de tours chaque cas a réussi, et l'étendue du taux, par version. */
 export const REFERENCE_STABILITE = ${JSON.stringify({ mesureLe: new Date().toISOString(), tours, versions }, null, 2)} as const;
 `;
 }
