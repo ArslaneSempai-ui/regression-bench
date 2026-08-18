@@ -59,11 +59,29 @@ async function runAll() {
   for (const [name, system] of Object.entries(VERSIONS)) save(await run(name, system, CASES));
 }
 
-/* The bench starts empty on a fresh page, exactly as a fresh clone does. Running the
- * versions is the first thing the screen asks for, and doing it silently on load would
- * hide the step the tool is about. */
+/*
+ * La démo arrive avec ses quatre exécutions déjà faites.
+ *
+ * Elle démarrait vide, comme un clone frais : c'était fidèle, et c'était le mauvais
+ * arbitrage. Les deux figures qui portent la thèse — les barres et la grille des cas —
+ * n'existaient pas tant que personne n'avait cliqué, et un visiteur qui passe trente
+ * secondes sur la page repartait sans avoir vu ce que l'outil démontre.
+ *
+ * Rien n'est mis en conserve pour autant : les quatre versions tournent vraiment, dans le
+ * navigateur, sur les vingt-deux cas. Le bouton « relancer » fait toujours exactement la
+ * même chose, et la première demande d'état l'attend au lieu de renvoyer un banc vide.
+ * L'amorçage n'a lieu qu'une fois : on garde la promesse, pas le résultat, donc deux
+ * appels concurrents au chargement ne lancent pas huit exécutions.
+ *
+ * (Pas d'accent grave dans ce bloc : il vit lui-même dans un gabarit.)
+ */
+let amorce = null;
+
 window.LOCAL = async (chemin, methode) => {
-  if (chemin === "/api/state") return { runs: summary(), cases: byCase, totalCases: CASES.length, grille: grille() };
+  if (chemin === "/api/state") {
+    await (amorce ??= runAll());
+    return { runs: summary(), cases: byCase, totalCases: CASES.length, grille: grille() };
+  }
   if (chemin === "/api/run") { await runAll(); return { runs: summary() }; }
 
   if (chemin.startsWith("/api/compare")) {
