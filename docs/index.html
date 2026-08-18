@@ -31,6 +31,7 @@ sanctions list runs to hundreds of thousands of entries and cannot be published.
   <p class="renvoi" id="provenanceLegende"></p>
 </main>
 
+<script>window.LOCAL_PRET = new Promise((r) => { window.LOCAL_POSE = r; });</script>
 <script type="module">
 import { run, save, load, runs } from "./js/bench.js";
 import { CASES } from "./js/cases.js";
@@ -103,6 +104,10 @@ window.LOCAL = async (chemin, methode) => {
   }
   return {};
 };
+
+/* Le shim est en place : l'écran peut partir. La balise classique qui a créé la promesse
+ * s'exécute avant tout module, donc personne ne peut la manquer. */
+window.LOCAL_POSE && window.LOCAL_POSE();
 </script>
 <script type="module">
 import { empile, grille, choisir, brancher as brancherFigures } from "./graphes.js";
@@ -116,9 +121,25 @@ const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":
  * shapes. Keeping one file rather than two means the hosted demo cannot drift from the
  * tool — which is the only way a demo stays worth clicking.
  */
-const api = async (pathFor, methode) =>
-  window.LOCAL ? window.LOCAL(pathFor, methode)
+/*
+ * Attendre que le shim soit posé, quand il y en a un.
+ *
+ * Sur l'hôte statique, le shim est un module qui importe six fichiers ; l'écran n'en
+ * importe qu'un. Si un seul de ces six tarde ou échoue, l'écran part avant lui, `api()`
+ * tombe sur `fetch("/api/...")`, GitHub répond sa page 404 en HTML, et le lecteur reçoit
+ * « Unexpected token '<' » avec un écran vide. Vu une fois sur cinq chargements de la
+ * démo du banc, donc invisible pour qui vérifie une seule fois.
+ *
+ * Une balise classique posée avant les modules crée la promesse ; le shim la tient. En
+ * local, `window.LOCAL_PRET` n'existe pas et rien n'attend.
+ */
+const pret = async () => { if (!window.LOCAL && window.LOCAL_PRET) await window.LOCAL_PRET; };
+
+const api = async (pathFor, methode) => {
+  await pret();
+  return window.LOCAL ? window.LOCAL(pathFor, methode)
     : (await fetch(pathFor, methode ? { method: methode } : {})).json();
+};
 
 /**
  * Les intitulés de l'écran, en anglais seul.
