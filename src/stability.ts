@@ -32,6 +32,16 @@ export type Stability = {
   unstable: Unstable[];
   /** True if every case gave the same verdict on every round. */
   stable: boolean;
+  /**
+   * Combien de tours chaque cas a réussi, tous les cas et pas seulement les instables.
+   *
+   * Sans ça, un écran qui veut dessiner la grille des cas doit prendre l'état de passage
+   * dans une *autre* exécution — et sur une version instable les deux échantillons se
+   * contredisent : la case est rouge « cassé par cette version » alors que la mesure de
+   * stabilité, à côté, vient de la juger stable. Un même dessin ne peut pas venir de deux
+   * tirages.
+   */
+  passesParCas: Record<string, number>;
 };
 
 export async function measureStability<E, S>(
@@ -61,7 +71,10 @@ export async function measureStability<E, S>(
     }
   }
 
-  return { version, rounds, unstable, stable: unstable.length === 0 };
+  return {
+    version, rounds, unstable, stable: unstable.length === 0,
+    passesParCas: Object.fromEntries(passes),
+  };
 }
 
 if (isMain(import.meta)) {

@@ -34,7 +34,10 @@ export async function measureStability(version, system, cases, rounds = 5, judge
             unstable.push({ caseId: id, passes: n, rounds, outputs: [...outputs.get(id)] });
         }
     }
-    return { version, rounds, unstable, stable: unstable.length === 0 };
+    return {
+        version, rounds, unstable, stable: unstable.length === 0,
+        passesParCas: Object.fromEntries(passes),
+    };
 }
 if (isMain(import.meta)) {
     const rounds = Number(arg(2) ?? 5);

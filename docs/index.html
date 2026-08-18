@@ -158,15 +158,16 @@ const T = {
     figDiffTitre: "Avant, après",
     figDiffAria: "Deux barres empilées : les cas réussis et échoués de la version d'avant, puis de celle d'après.",
     segReussis: "réussis", segEchoues: "échoués",
-    figGrilleTitre: (n, v) => `${n} cas × ${v} versions — un trou dans une colonne est une régression`,
+    figGrilleTitre: (n, v) => `${n} cas × ${v} versions, sur 8 tours — un trou dans une colonne est une régression`,
     figGrilleAria: "Grille des cas par version. Chaque colonne est un cas, chaque ligne une version. "
       + "Une case vide entourée de rouge est un cas qui passait à la version précédente et ne passe plus.",
     grilleOk: "passe", grilleKo: "échoue déjà",
     grilleCasse: "cassé par cette version", grilleRepare: "réparé par cette version",
+    grilleInstable: "instable : ne passe pas toujours",
     grilleSuite: (v, repare, casse) => `<b>${v}</b> répare ${repare} cas et en casse ${casse}`
       + " — pendant que son taux monte. Aucun taux ne dit ça ; la grille le dit sans commentaire.",
     grilleRien: "Aucune version ne casse un cas que la précédente réussissait.",
-    lancerStabilite: "Mesurer sur 8 tours",
+    lancerStabilite: "Remesurer sur 8 tours",
     stable: "stable",
     instable: (n, c, tours) => `${n} — ${c.caseId} : ${c.passes}/${tours}, sorties observées : ${c.outputs.join(" / ")}`,
     toutStable: "Toutes les versions sont stables.",
@@ -205,15 +206,16 @@ const T = {
     figDiffTitre: "Before, after",
     figDiffAria: "Two stacked bars: passed and failed cases of the before version, then of the after one.",
     segReussis: "passed", segEchoues: "failed",
-    figGrilleTitre: (n, v) => `${n} cases × ${v} versions — a hole in a column is a regression`,
+    figGrilleTitre: (n, v) => `${n} cases × ${v} versions, over 8 rounds — a hole in a column is a regression`,
     figGrilleAria: "Grid of cases by version. Each column is a case, each row a version. "
       + "An empty cell outlined in red is a case that passed on the previous version and no longer does.",
     grilleOk: "passes", grilleKo: "already failing",
     grilleCasse: "broken by this version", grilleRepare: "fixed by this version",
+    grilleInstable: "unstable: does not always pass",
     grilleSuite: (v, repare, casse) => `<b>${v}</b> fixes ${repare} cases and breaks ${casse}`
       + " — while its rate goes up. No rate says that; the grid says it without a word.",
     grilleRien: "No version breaks a case the previous one passed.",
-    lancerStabilite: "Measure over 8 runs",
+    lancerStabilite: "Measure again over 8 runs",
     stable: "stable",
     instable: (n, c, runs) => `${n} — ${c.caseId}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
     toutStable: "Every version is stable.",
@@ -241,27 +243,60 @@ function blocVersions() {
    * la barre s'allonge, et deux trous apparaissent dans les colonnes.
    */
   const g = state.grille;
+  /*
+   * La grille vient de la mesure de stabilité, pas d'une exécution isolée.
+   *
+   * Une exécution unique d'une version instable est un pile ou face : sur la même page,
+   * la case pouvait être rouge « cassé par cette version » pendant que la mesure de
+   * stabilité, juste en dessous, jugeait le cas stable. Deux tirages, deux vérités. En
+   * lisant les deux dans le même échantillon — huit tours — la contradiction devient
+   * impossible plutôt qu'improbable : toujours réussi, toujours échoué, ou entre les deux.
+   *
+   * Les barres au-dessus restent une exécution simple, et c'est assumé : elles montrent le
+   * taux qu'on lit d'habitude, celui-là même qui cache la casse.
+   */
+  const mesureDe = (version) => stabilite?.versions.find((v) => v.version === version) ?? null;
   const figGrille = grille({
     colonnes: g.cas,
-    lignes: g.versions.map((v, i) => ({
-      nom: v.version,
-      cellules: v.passes,
-      bout: `${v.passes.filter(Boolean).length}/${g.cas.length}`,
-    })),
+    lignes: g.versions.map((v) => {
+      const m = mesureDe(v.version);
+      const flous = new Set((m?.unstable ?? []).map((c) => c.caseId));
+      const surs = m
+        ? g.cas.map((id) => (m.passesParCas?.[id] ?? 0) === m.rounds)
+        : v.passes;
+      return {
+        nom: v.version,
+        cellules: surs,
+        instables: g.cas.map((id) => flous.has(id)),
+        bout: `${surs.filter(Boolean).length}/${g.cas.length}`,
+      };
+    }),
     legende: [
       { texte: L.grilleOk, etat: "ok" }, { texte: L.grilleKo, etat: "ko" },
       { texte: L.grilleCasse, etat: "casse" }, { texte: L.grilleRepare, etat: "repare" },
+      ...(stabilite?.versions.some((v) => !v.stable) ? [{ texte: L.grilleInstable, etat: "instable" }] : []),
     ],
     aria: L.figGrilleAria,
   });
 
   /* La phrase nomme la version qui casse le plus, sans la choisir à la main. */
+  /* Le même échantillon que la grille : le bilan écrit sous la figure doit décrire la
+   * figure, pas une autre exécution. */
+  const surs = (v) => {
+    const m = mesureDe(v.version);
+    return m ? g.cas.map((id) => (m.passesParCas?.[id] ?? 0) === m.rounds) : v.passes;
+  };
   const bilans = g.versions.slice(1).map((v, i) => {
-    const avant = g.versions[i].passes;
+    const avant = surs(g.versions[i]);
+    const ici = surs(v);
+    const flous = new Set((mesureDe(v.version)?.unstable ?? []).map((c) => c.caseId));
+    const ferme = (j) => !flous.has(g.cas[j]);
     return {
       version: v.version,
-      repare: v.passes.filter((p, j) => p && avant[j] === false).length,
-      casse: v.passes.filter((p, j) => p === false && avant[j] === true).length,
+      repare: ici.filter((p, j) => p && avant[j] === false && ferme(j)).length,
+      /* Une casse annoncée doit être une casse : un cas instable est compté à part, sinon
+       * la phrase sous la figure accuse une version d'une régression qui n'existe pas. */
+      casse: ici.filter((p, j) => p === false && avant[j] === true && ferme(j)).length,
     };
   });
   const pire = bilans.slice().sort((a, b) => b.casse - a.casse)[0];
@@ -438,7 +473,19 @@ async function agir(travail) {
   }
 }
 
-async function charger() { state = await api("/api/state"); }
+/*
+ * L'état et la stabilité, ensemble.
+ *
+ * La stabilité était derrière un bouton, donc invisible pour qui ne clique pas — et la
+ * grille au-dessus marquait « cassé par cette version » un cas qui est seulement instable,
+ * une visite sur huit. Or les deux mesures coûtent la même chose : trois millisecondes
+ * pour quatre exécutions, cinq pour huit tours sur quatre versions. Il n'y avait rien à
+ * arbitrer. Une seule mesure, deux endroits, aucun clic.
+ */
+async function charger() {
+  state = await api("/api/state");
+  stabilite = await api("/api/stability?runs=8", "POST");
+}
 
 for (const l of ["fr", "en"]) {
   $(`#${l}`).onclick = () => { langue = l; localStorage.setItem("langue", l); dessiner(); };
