@@ -27,6 +27,7 @@
 </main>
 
 <script type="module">
+import { empile } from "/graphes.js";
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 /*
@@ -51,7 +52,7 @@ const T = {
   fr: {
     h1: "Banc de régression",
     provenance: "Chaque chiffre de cette page est <b>retrouvé</b> dans un texte public, <b>mesuré</b> en faisant tourner le code, <b>supposé</b> parce que personne ici ne peut le connaître, ou <b>choisi</b> par moi. Le README dit lequel, un par un.",
-    lede: "Un banc qui ne donne pas une note mais dit ce qui a changé. Une justesse qui monte peut cacher des cas qui viennent de casser — et sur un système de conformité, c'est presque toujours la mauvaise nouvelle.",
+    lede: "Un banc qui ne donne pas une note, mais dit ce qui a changé.",
     titreVersions: "Les versions évaluées",
     versionsQuoi: (n) => `Le même jeu de ${n} cas de contrôle, passé sur quatre versions successives d'un criblage de noms contre une liste de sanctions.`,
     relancer: "Relancer les quatre versions",
@@ -74,7 +75,12 @@ const T = {
     jeuBouge: (a, r) => `Jeu modifié : ${a} cas ajouté(s), ${r} retiré(s) — la comparaison est partielle.`,
 
     titreStabilite: "Stabilité",
-    stabiliteQuoi: "Le même système, le même cas, plusieurs fois. Un cas qui réussit sept fois sur huit n'est pas un cas qui réussit : comparé à demain, il produira des régressions qui n'ont rien à voir avec le code.",
+    stabiliteQuoi: "Un cas qui réussit sept fois sur huit n'est pas un cas qui réussit.",
+    figVersionsTitre: "Ce que chaque version fait passer",
+    figVersionsAria: "Une barre par version, coupée en cas réussis et cas échoués sur le même jeu de vingt-deux : le bloc des échecs se réduit d'une version à l'autre puis cesse de bouger.",
+    figDiffTitre: "Avant, après",
+    figDiffAria: "Deux barres empilées : les cas réussis et échoués de la version d'avant, puis de celle d'après.",
+    segReussis: "réussis", segEchoues: "échoués",
     lancerStabilite: "Mesurer sur 8 tours",
     stable: "stable",
     instable: (n, c, tours) => `${n} — ${c.caseId} : ${c.passes}/${tours}, sorties observées : ${c.outputs.join(" / ")}`,
@@ -85,7 +91,7 @@ const T = {
   en: {
     h1: "Regression bench",
     provenance: "Every figure on this page is <b>retrieved</b> from a public source, <b>measured</b> by running the code, <b>assumed</b> because nobody here can know it, or <b>chosen</b> by me. The README says which, one by one.",
-    lede: "A bench that doesn't hand you a score — it tells you what changed. A rising pass rate can hide cases that just broke, and on a compliance system that's almost always the bad news.",
+    lede: "A bench that doesn't hand you a score — it tells you what changed.",
     titreVersions: "The versions under test",
     versionsQuoi: (n) => `The same set of ${n} check cases, run against four successive versions of a name screening system matching against a sanctions list.`,
     relancer: "Re-run all four versions",
@@ -108,7 +114,12 @@ const T = {
     jeuBouge: (a, r) => `Case set changed: ${a} added, ${r} removed — the comparison is partial.`,
 
     titreStabilite: "Stability",
-    stabiliteQuoi: "The same system, the same case, several times. A case that passes seven times out of eight isn't a case that passes: compared against tomorrow it will produce regressions that have nothing to do with the code.",
+    stabiliteQuoi: "A case that passes seven times out of eight isn't a case that passes.",
+    figVersionsTitre: "What each version gets through",
+    figVersionsAria: "One bar per version, split into cases passed and cases failed on the same set of twenty-two: the failure block shrinks from one version to the next then stops moving.",
+    figDiffTitre: "Before, after",
+    figDiffAria: "Two stacked bars: passed and failed cases of the before version, then of the after one.",
+    segReussis: "passed", segEchoues: "failed",
     lancerStabilite: "Measure over 8 runs",
     stable: "stable",
     instable: (n, c, runs) => `${n} — ${c.caseId}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
@@ -132,10 +143,17 @@ function blocVersions() {
     <div class="feuillet"><div class="quoi">${esc(L.versionsQuoi(state.totalCases))}</div>
       <div class="rang"><button class="b" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
     <section class="feuillet"><div class="corps">
-      ${state.runs.map((e) => `<div class="ligne">
-        <span class="intitule"><span class="reference">${esc(e.version)}</span>
-          <small>${e.passed} / ${e.total}</small></span>
-        <span class="valeur">${pc(e.rate)}</span></div>`).join("")}
+      <div class="titre-fig">${esc(L.figVersionsTitre)}</div>
+      ${empile({
+        /* Le total est le même pour les quatre versions : c'est le taux qu'on vient lire,
+         * et il remplace la liste de lignes qui répétait la figure mot pour mot. */
+        items: state.runs.map((e) => ({ nom: e.version, bout: pc(e.rate), parts: [
+          { nom: L.segReussis, valeur: e.passed, ton: "accent" },
+          { nom: L.segEchoues, valeur: e.total - e.passed, ton: "neutre" },
+        ] })),
+        fmt: (v) => String(Math.round(v)),
+        aria: L.figVersionsAria,
+      })}
     </div></section>`;
   $("#relancer").onclick = async () => {
     await agir(async () => { const r = await api("/api/run", "POST"); state.runs = r.runs; await charger(); });
@@ -194,7 +212,22 @@ function blocComparaison() {
 
     const solde = c.verdict === "regression" ? "defavorable"
       : c.verdict === "amelioration" ? "favorable" : "attente";
+    /* Le bloc gris est le sujet : on regarde s'il rétrécit, et surtout s'il a changé de
+     * composition — un solde nul peut cacher trois réparés et trois cassés. */
     html += `<section class="feuillet"><div class="corps">
+      <div class="titre-fig">${esc(L.figDiffTitre)}</div>
+      ${empile({
+        items: [
+          { nom: c.before, parts: [
+            { nom: L.segReussis, valeur: Math.round(c.rateBefore * state.totalCases), ton: "accent" },
+            { nom: L.segEchoues, valeur: state.totalCases - Math.round(c.rateBefore * state.totalCases), ton: "neutre" } ], bout: pc(c.rateBefore) },
+          { nom: c.after, parts: [
+            { nom: L.segReussis, valeur: Math.round(c.rateAfter * state.totalCases), ton: "accent" },
+            { nom: L.segEchoues, valeur: state.totalCases - Math.round(c.rateAfter * state.totalCases), ton: "neutre" } ], bout: pc(c.rateAfter) },
+        ],
+        fmt: (v) => String(Math.round(v)),
+        aria: L.figDiffAria,
+      })}
       <div class="ligne"><span class="intitule">${esc(L.before)} · ${esc(c.before)}</span>
         <span class="valeur">${pc(c.rateBefore)}</span></div>
       <div class="ligne"><span class="intitule">${esc(L.after)} · ${esc(c.after)}</span>
