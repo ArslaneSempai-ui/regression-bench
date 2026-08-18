@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Banc de régression</title>
+<title>The pass rate went up and two cases broke</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23fbfaf7'/%3E%3Crect x='2' y='4' width='12' height='1' fill='%23111'/%3E%3Crect x='2' y='7' width='12' height='1' fill='%23111'/%3E%3Crect x='2' y='11' width='12' height='2' fill='%23111'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="registre.css" />
 </head>
@@ -11,7 +11,6 @@
 <main>
   <div class="haut">
     <div><h1 id="h1"></h1><p class="lede" id="lede"></p></div>
-    <div class="lang"><button id="fr" type="button">FR</button><button id="en" type="button">EN</button></div>
   </div>
 <p class="renvoi" style="margin-bottom:1.5rem">
 This runs entirely in your browser — no server, no data leaves your machine, and the runs
@@ -106,7 +105,7 @@ window.LOCAL = async (chemin, methode) => {
 };
 </script>
 <script type="module">
-import { empile, grille, brancher as brancherFigures } from "./graphes.js";
+import { empile, grille, choisir, brancher as brancherFigures } from "./graphes.js";
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 /*
@@ -122,71 +121,19 @@ const api = async (pathFor, methode) =>
     : (await fetch(pathFor, methode ? { method: methode } : {})).json();
 
 /**
- * Les deux langues.
+ * Les intitulés de l'écran, en anglais seul.
  *
  * Le moteur ne fabrique aucune phrase : il renvoie des structures, l'écran les formule.
  * La leçon vient du projet précédent, où un moteur français alimentait un écran anglais.
  */
 const T = {
-  fr: {
-    h1: "Banc de régression",
-    provenance: "Chaque chiffre de cette page est <b>retrouvé</b> dans un texte public, <b>mesuré</b> en faisant tourner le code, <b>supposé</b> parce que personne ici ne peut le connaître, ou <b>choisi</b> par moi. Le README dit lequel, un par un.",
-    lede: "Un banc qui ne donne pas une note, mais dit ce qui a changé.",
-    titreVersions: "Les versions évaluées",
-    versionsQuoi: (n) => `Le même jeu de ${n} cas de contrôle, passé sur quatre versions successives d'un criblage de noms contre une liste de sanctions.`,
-    relancer: "Relancer les quatre versions",
-    titreComparaison: "Comparer deux versions",
-    comparer: "Comparer", avant: "avant", apres: "après",
-
-    regression: (n) => `${n} régression${n > 1 ? "s" : ""} — changement suspect`,
-    regressionQuoi: (g, a, b) => g > 0
-      ? `Le taux passe de ${a} à ${b}, et pourtant des cas validés ne passent plus. Une moyenne qui monte ne rachète pas un comportement qu'on ne sait plus expliquer.`
-      : `Le taux passe de ${a} à ${b}.`,
-    amelioration: (n) => `${n} gain${n > 1 ? "s" : ""}, aucune régression`,
-    ameliorationQuoi: (a, b) => `${a} → ${b}. Rien de ce qui marchait n'a cessé de marcher.`,
-    neutre: "Aucun changement de verdict",
-    neutreQuoi: (b) => `${b} des deux côtés, cas par cas.`,
-    incomparable: "Rien à comparer",
-    incomparableQuoi: "Ces deux exécutions n'ont aucun cas en commun.",
-
-    casses: "Ce qui ne marche plus", repares: "Ce qui marche désormais",
-    silencieux: (n) => `${n} cas au verdict inchangé mais à la sortie différente`,
-    jeuBouge: (a, r) => `Jeu modifié : ${a} cas ajouté(s), ${r} retiré(s) — la comparaison est partielle.`,
-
-    titreStabilite: "Stabilité",
-    stabiliteQuoi: "Un cas qui réussit sept fois sur huit n'est pas un cas qui réussit.",
-    figVersionsTitre: "Ce que chaque version fait passer",
-    figVersionsAria: "Une barre par version, coupée en cas réussis et cas échoués sur le même jeu de vingt-deux : le bloc des échecs se réduit d'une version à l'autre puis cesse de bouger.",
-    figDiffTitre: "Avant, après",
-    figDiffAria: "Deux barres empilées : les cas réussis et échoués de la version d'avant, puis de celle d'après.",
-    segReussis: "réussis", segEchoues: "échoués",
-    figGrilleTitre: (n, v) => `${n} cas × ${v} versions — un trou dans une colonne est une régression`,
-    etendue: (a, b) => `${a} – ${b}`,
-    mesureeLe: (d, t) => `Mesuré le ${d} sur ${t} tours, et livré avec la page : une des versions court après une horloge, donc rejouer la mesure ne donne pas deux fois le même résultat.`,
-    figGrilleAria: "Grille des cas par version. Chaque colonne est un cas, chaque ligne une version. "
-      + "Une case vide entourée de rouge est un cas qui passait à la version précédente et ne passe plus.",
-    grilleOk: "passe", grilleKo: "échoue déjà",
-    grilleCasse: "cassé par cette version", grilleRepare: "réparé par cette version",
-    grilleInstable: "instable : ne passe pas toujours",
-    grilleSuite: (v, repare, casse) => `<b>${v}</b> répare ${repare} cas et en casse ${casse}`
-      + " — pendant que son taux monte. Aucun taux ne dit ça ; la grille le dit sans commentaire.",
-    grilleRien: "Aucune version ne casse un cas que la précédente réussissait.",
-    lancerStabilite: "Remesurer sur 8 tours",
-    stable: "stable",
-    instable: (n, c, tours) => `${n} — ${c.caseId} : ${c.passes}/${tours}, sorties observées : ${c.outputs.join(" / ")}`,
-    toutStable: "Toutes les versions sont stables.",
-    aucuneMesure: "Pas encore mesuré.",
-    aucun: "aucun", calcul: "Calcul…",
-  },
-  en: {
     h1: "Regression bench",
     provenance: "Every figure on this page is <b>retrieved</b> from a public source, <b>measured</b> by running the code, <b>assumed</b> because nobody here can know it, or <b>chosen</b> by me. The README says which, one by one.",
     lede: "A bench that doesn't hand you a score — it tells you what changed.",
     titreVersions: "The versions under test",
     versionsQuoi: (n) => `The same set of ${n} check cases, run against four successive versions of a name screening system matching against a sanctions list.`,
     relancer: "Re-run all four versions",
-    titreComparaison: "Compare two versions",
-    compare: "Compare", before: "before", after: "after",
+    titreComparaison: "What that release changed",
 
     regression: (n) => `${n} regression${n > 1 ? "s" : ""} — change is suspect`,
     regressionQuoi: (g, a, b) => g > 0
@@ -221,17 +168,16 @@ const T = {
     grilleSuite: (v, repare, casse) => `<b>${v}</b> fixes ${repare} cases and breaks ${casse}`
       + " — while its rate goes up. No rate says that; the grid says it without a word.",
     grilleRien: "No version breaks a case the previous one passed.",
+    grilleCommande: (avant, apres) => `Reading <b>${apres}</b> against <b>${avant}</b>. Take another row to read that release instead — the first has nothing before it.`,
     lancerStabilite: "Measure again over 8 runs",
     stable: "stable",
     instable: (n, c, runs) => `${n} — ${c.caseId}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
     toutStable: "Every version is stable.",
     aucuneMesure: "Not measured yet.",
     aucun: "none", calcul: "Measuring…",
-  },
 };
 
-let langue = localStorage.getItem("langue") === "fr" ? "fr" : "en";
-const t = () => T[langue];
+const t = () => T;
 const pc = (x) => (x * 100).toFixed(1) + " %";
 
 let state = null, comparaison = null, stabilite = null, occupe = false;
@@ -276,6 +222,9 @@ function blocVersions() {
         cellules: surs,
         instables: g.cas.map((id) => flous.has(id)),
         bout: `${surs.filter(Boolean).length}/${g.cas.length}`,
+        /* La première version n'a pas d'avant : pas de prise, plutôt qu'une prise morte. */
+        choix: couple(v.version) ? v.version : null,
+        ici: v.version === choixApres,
       };
     }),
     legende: [
@@ -284,6 +233,10 @@ function blocVersions() {
       ...(ref?.versions.some((v) => !v.stable) ? [{ texte: L.grilleInstable, etat: "instable" }] : []),
     ],
     aria: L.figGrilleAria,
+    /* Pas de mot flottant sur la bande : il tombait sur le compte de la ligne du dessus,
+     * et la phrase sous la figure nomme déjà le couple lu. Le nom en gras suffit à dire
+     * quelle ligne est prise — une graisse, pas seulement une teinte. */
+    choix: true,
   });
 
   /* La phrase nomme la version qui casse le plus, sans la choisir à la main. */
@@ -312,7 +265,7 @@ function blocVersions() {
     : L.grilleRien;
   $("#versions").innerHTML = `
     <div class="feuillet"><div class="quoi">${esc(L.versionsQuoi(state.totalCases))}</div>
-      <div class="rang"><button class="b" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
+      <div class="rang"><button class="b primaire" id="relancer" type="button">${esc(L.relancer)}</button></div></div>
     <section class="feuillet"><div class="corps">
       <div class="titre-fig">${esc(L.figVersionsTitre)}</div>
       ${empile({
@@ -342,30 +295,36 @@ function blocVersions() {
       <div class="titre-fig">${esc(L.figGrilleTitre(state.totalCases, state.runs.length))}</div>
       ${figGrille}
       <div class="suite">${suiteGrille}</div>
+    <div class="renvoi">${choixAvant ? L.grilleCommande(esc(choixAvant), esc(choixApres)) : ""}</div>
     </div></section>`;
 
   brancherFigures($("#versions"));
+  choisir($("#versions"), (version) => {
+    const c = couple(version);
+    if (!c) return;
+    choixAvant = c.avant; choixApres = c.apres;
+    agir(async () => {
+      comparaison = await api(`/api/compare?before=${encodeURIComponent(c.avant)}&after=${encodeURIComponent(c.apres)}`);
+    });
+  }, choixApres);
   $("#relancer").onclick = async () => {
     await agir(async () => { const r = await api("/api/run", "POST"); state.runs = r.runs; await charger(); });
   };
 }
 
-function blocChoix() {
-  const L = t();
+/*
+ * Le couple comparé se prend sur la grille.
+ *
+ * C'étaient deux listes déroulantes et un bouton, posés sous une figure qui montre déjà
+ * toutes les versions les unes sous les autres. La question de cet outil n'est pas « deux
+ * versions au hasard », c'est **qu'est-ce que cette livraison a changé** : on prend donc la
+ * ligne de la version, et la précédente est l'avant. La première ligne n'est pas un choix —
+ * rien ne la précède — et elle ne porte pas de prise plutôt que d'en porter une inerte.
+ */
+function couple(version) {
   const noms = state.runs.map((e) => e.version);
-  if (!noms.includes(choixAvant)) choixAvant = noms[1] ?? noms[0];
-  if (!noms.includes(choixApres)) choixApres = noms[2] ?? noms[noms.length - 1];
-
-  const options = (choisi) => noms.map((n) =>
-    `<option value="${esc(n)}"${n === choisi ? " selected" : ""}>${esc(n)}</option>`).join("");
-
-  return `<div class="feuillet"><div class="rang">
-      <label class="quoi" for="av">${esc(L.before)}</label>
-      <select id="av" aria-label="${esc(L.before)}">${options(choixAvant)}</select>
-      <label class="quoi" for="ap">${esc(L.after)}</label>
-      <select id="ap" aria-label="${esc(L.after)}">${options(choixApres)}</select>
-      <button class="b" id="cmp" type="button">${esc(L.compare)}</button>
-    </div></div>`;
+  const i = noms.indexOf(version);
+  return i > 0 ? { avant: noms[i - 1], apres: noms[i] } : null;
 }
 
 function mouvement(m, classe) {
@@ -374,7 +333,7 @@ function mouvement(m, classe) {
   return `<div class="ligne">
     <span class="intitule"><span class="reference">${esc(m.cas)}</span>
       ${esc(JSON.stringify(info.input))}
-      <small>${esc(info.why?.[langue] ?? "")}</small></span>
+      <small>${esc(info.why?.en ?? "")}</small></span>
     <span class="valeur ${classe === "casse" ? "defavorable" : "favorable"}">
       ${esc(val(m.before.actual))} \u2192 ${esc(val(m.after.actual))}</span>
   </div>`;
@@ -383,7 +342,7 @@ function mouvement(m, classe) {
 function blocComparaison() {
   const L = t();
   $("#titreComparaison").textContent = L.titreComparaison;
-  let html = blocChoix();
+  let html = "";
 
   if (comparaison && comparaison.error) {
     // Peut arriver si une exécution disparaît entre le chargement de l'écran et le clic.
@@ -444,11 +403,6 @@ function blocComparaison() {
   }
 
   $("#comparaison").innerHTML = html;
-  $("#av").onchange = (e) => { choixAvant = e.target.value; };
-  $("#ap").onchange = (e) => { choixApres = e.target.value; };
-  $("#cmp").onclick = () => agir(async () => {
-    comparaison = await api(`/api/compare?before=${encodeURIComponent(choixAvant)}&after=${encodeURIComponent(choixApres)}`);
-  });
 }
 
 function blocStabilite() {
@@ -467,7 +421,7 @@ function blocStabilite() {
       : unstable.flatMap((v) => v.unstable.map((c) =>
           `<div class="renvoi attention">${esc(L.instable(v.version, c, m.runs))}</div>`)).join("");
     if (!stabilite && m.mesureLe) {
-      html += `<div class="renvoi">${esc(L.mesureeLe(new Date(m.mesureLe).toLocaleDateString(langue === "fr" ? "fr-FR" : "en-GB"), m.runs))}</div>`;
+      html += `<div class="renvoi">${esc(L.mesureeLe(new Date(m.mesureLe).toLocaleDateString("en-GB"), m.runs))}</div>`;
     }
   } else {
     html += `<div class="vide">${esc(L.aucuneMesure)}</div>`;
@@ -479,12 +433,9 @@ function blocStabilite() {
 
 function dessiner() {
   const L = t();
-  document.documentElement.lang = langue;
   $("#h1").textContent = L.h1;
   $("#provenanceLegende").innerHTML = L.provenance;
   $("#lede").textContent = L.lede;
-  $("#fr").className = langue === "fr" ? "on" : "";
-  $("#en").className = langue === "en" ? "on" : "";
   blocVersions(); blocComparaison(); blocStabilite();
 }
 
@@ -534,11 +485,25 @@ const stabiliteReference = () => {
   };
 };
 
-for (const l of ["fr", "en"]) {
-  $(`#${l}`).onclick = () => { langue = l; localStorage.setItem("langue", l); dessiner(); };
+await charger();
+
+/*
+ * La comparaison de départ est la dernière livraison.
+ *
+ * C'est la question qu'on se pose en arrivant — « qu'est-ce que celle-ci a changé ? » — et
+ * ça évite une section vide sous un titre, qui se lit comme un défaut plutôt que comme une
+ * invitation. Le lecteur voit ce que la commande produit avant d'y toucher.
+ */
+{
+  const noms = state.runs.map((e) => e.version);
+  choixApres = noms[noms.length - 1];
+  const c0 = couple(choixApres);
+  if (c0) {
+    choixAvant = c0.avant;
+    comparaison = await api(`/api/compare?before=${encodeURIComponent(c0.avant)}&after=${encodeURIComponent(c0.apres)}`);
+  }
 }
 
-await charger();
 dessiner();
 </script>
 </body>

@@ -7,9 +7,9 @@ went up **while cases that used to work stopped working**.
 **The finding.** Between two versions of a sanctions screener, the pass rate went **up** — 81.8 % to 86.4 % — while **2 named cases** that had been validated stopped working. On 22 cases the rate difference is inside the noise; the broken cases are not. One of those numbers is an estimate and the other is a fact, and a dashboard renders them identically.
 <!-- /figures:finding -->
 
-**[Try it in your browser →](https://arslanesempai-ui.github.io/regression-bench/)** — run the four versions yourself, then compare any two. The runs are yours and die with the tab.
+**[Try it in your browser →](https://arslanesempai-ui.github.io/regression-bench/)** — take a version's row on the grid and read what that release changed. The runs are yours and die with the tab.
 
-![Comparing two versions](images/comparison.png)
+![Taking each version's row: the pass rate climbs while cases break underneath](images/versions.gif)
 
 ```bash
 npm start          # the comparison screen, on localhost:4600

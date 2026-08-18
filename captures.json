@@ -1,1 +1,11 @@
-{ "images": [ { "sortie": "images/comparison.png", "type": "png", "taille": [1100, 2000], "echelle": 2, "depart": 300, "hauteurUtile": 640 } ] }
+{ "images": [
+  { "sortie": "images/comparison.png", "type": "png", "taille": [1100, 2000], "echelle": 2,
+    "depart": 300, "hauteurUtile": 640 },
+  { "sortie": "images/versions.gif", "type": "gif", "taille": [900, 548], "echelle": 2,
+    "duree": 1400, "fenetre": [1100, 2200], "depart": 585, "hauteurUtile": 670,
+    "scenes": [
+      ["#versions .grille-zone[data-choix=\"v2-normalise\"]!"],
+      ["#versions .grille-zone[data-choix=\"v3-approximatif\"]!"],
+      ["#versions .grille-zone[data-choix=\"v4-sous-budget\"]!"]
+    ] }
+] }
