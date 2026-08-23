@@ -11,6 +11,27 @@
  * shared guard is half a mechanism — so this one is put where it can be copied whole,
  * rather than appended to a file that must stay identical to its canonical source.
  *
+ * THIS FILE IS TEMPORARY, AND HERE IS WHAT DECIDES WHEN IT GOES.
+ *
+ * The shared layer now carries its own `.pathname` guard, in `gardiens.test.mjs`, which
+ * arrives with the modules it protects — the right answer, and better than this file in one
+ * respect: it strips TEMPLATE LITERALS before looking, which this one does not. That blind
+ * spot is not hypothetical. A mass conversion put an `import` inside a template literal in
+ * this very repository today, because the pattern recognised a line that LOOKED like an
+ * import inside a string that holds browser code.
+ *
+ * But the travelling guard is narrower on the pattern, measured:
+ *
+ *   new URL("./a.ts", import.meta.url).pathname   both catch it
+ *   new URL(urlDuFichier).pathname                only this file catches it
+ *   new URL(base + nom).pathname                  only this file catches it
+ *   url.pathname === "/"                          neither fires — correct
+ *
+ * So neither subsumes the other, and two guards for one rule is the shape we spend the day
+ * removing. **This file goes the moment the shared one takes the broader pattern** — that
+ * has been reported rather than fixed here, because a guard that lives in the layer must be
+ * changed in the layer, not in eleven copies.
+ *
  * MENTIONS ARE NOT USES. This rule fired on its own comment at the first attempt, which is
  * the fault this catalogue describes as its most frequent: committed inside the tool that
  * watches for it. Comments and strings are stripped before looking, PRESERVING LINE COUNT —
