@@ -34,6 +34,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 /*
  * ─── CE FICHIER A EU LE DÉFAUT QU'IL CHASSE, DEUX FOIS ───
@@ -47,11 +48,11 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
  * Un gardien des périmètres dont le périmètre est un seul dossier est exactement la chose
  * qu'il refuse aux autres. Il est donc recopié dans chaque dépôt et regarde le sien.
  */
-const ICI = new URL(".", import.meta.url).pathname;
+const ICI = fileURLToPath(new URL(".", import.meta.url));
 const MARQUE = "liste-figee:";
 
 /** La liste des dépôts vit dans `identite` ; un dépôt cloné seul n'y a pas accès. */
-const LISTE = new URL("../../identite/depots.json", import.meta.url).pathname;
+const LISTE = fileURLToPath(new URL("../../identite/depots.json", import.meta.url));
 
 const tests = readdirSync(ICI, { withFileTypes: true })
   .filter((e) => e.isFile() && /\.test\.(mjs|ts)$/.test(e.name) && e.name !== "gardiens.test.mjs")

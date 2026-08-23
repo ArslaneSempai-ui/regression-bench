@@ -15,6 +15,7 @@ import { INVENTORY, CITED } from "./inventory.ts";
 import { markdown } from "./provenance.ts";
 
 import { run as emit, table } from "./figures.ts";
+import { fileURLToPath } from "node:url";
 
 /* Runs persist to disk when the bench is driven from Node; the browser build keeps
  * them in memory instead — see `bench.ts`. */
@@ -125,4 +126,4 @@ const finding = (() => {
     `dashboard renders them identically.`;
 })();
 
-emit(new URL("../README.md", import.meta.url).pathname, { finding, versions, verdict, stakes, provenance });
+emit(fileURLToPath(new URL("../README.md", import.meta.url)), { finding, versions, verdict, stakes, provenance });

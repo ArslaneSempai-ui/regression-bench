@@ -27,8 +27,9 @@ import { measureStability } from "./stability.ts";
 import { VERSIONS } from "./screening.ts";
 import { CASES } from "./cases.ts";
 import { isMain, arg } from "./cli.ts";
+import { fileURLToPath } from "node:url";
 
-const CIBLE = new URL("./reference-stabilite.ts", import.meta.url).pathname;
+const CIBLE = fileURLToPath(new URL("./reference-stabilite.ts", import.meta.url));
 
 export async function figer(tours: number): Promise<string> {
   const versions: Record<string, { passesParCas: Record<string, number>; taux: { bas: number; haut: number; moyen: number } }> = {};

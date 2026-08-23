@@ -10,7 +10,7 @@ import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync } from 
 import { brancherStore } from "./bench.ts";
 import type { Run } from "./bench.ts";
 
-const DIRECTORY = new URL("../data/runs", import.meta.url).pathname;
+const DIRECTORY = fileURLToPath(new URL("../data/runs", import.meta.url));
 
 const pathFor = (version: string) =>
   `${DIRECTORY}/${version.replace(/[^a-z0-9_.-]/gi, "_")}.json`;
