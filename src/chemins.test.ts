@@ -26,20 +26,18 @@ import { fileURLToPath } from "node:url";
 const ICI = fileURLToPath(new URL(".", import.meta.url));
 
 /*
- * DECLARED EXCLUSION, because a count that hides what it drops is not a count.
+ * THE EXEMPTION IS GONE, AND IT ANNOUNCED ITS OWN REMOVAL.
  *
- * These four are shared verbatim with `identite`, their canonical source, which is outside
- * this repository. They still carry the pattern. Fixing them here would make the
- * `les couches partagées` test fail by construction: the repository would be correct and
- * inconsistent at the same time. They are named, and the count is asserted, so that the
- * exemption is visible and cannot quietly become an exemption that exempts nothing.
+ * Four files were exempted here: `demo.test.ts`, `ecran.test.ts`, `liaison.test.ts` and
+ * `registre.test.ts`, shared verbatim with `identite`, their canonical source outside this
+ * repository. Correcting them here would have made `les couches partagées` fail by
+ * construction. The exemption carried an assertion that the exempted count stayed non-zero
+ * — so that it could not quietly become an exemption that exempts nothing.
  *
- * liste-figee: les quatre fichiers partages verbatim avec `identite`, leur source
- * canonique, hors de ce depot. Ils portent encore le motif ; les corriger ici ferait
- * echouer `les couches partagees` par construction. La liste ne se deduit pas du disque
- * parce que c'est une decision de propriete, pas une propriete du disque.
+ * `identite` fixed them, the layer was recopied, and that assertion fired within the hour
+ * with the message telling the reader to drop the list. **A declared exclusion is the only
+ * kind that can tell you when it has expired.** A silent one would still be here.
  */
-const PARTAGES_AVEC_IDENTITE = ["demo.test.ts", "ecran.test.ts", "liaison.test.ts", "registre.test.ts"];
 
 const sansCommentairesNiChaines = (t: string): string => t
   .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
@@ -48,22 +46,29 @@ const sansCommentairesNiChaines = (t: string): string => t
 
 test("no file uses `.pathname` on a file URL", () => {
   const fautifs: string[] = [];
-  let exemptes = 0;
+  let examines = 0;
 
   for (const f of readdirSync(ICI)) {
     if (!/\.(ts|mjs|js)$/.test(f)) continue;
+    examines++;
     sansCommentairesNiChaines(readFileSync(ICI + f, "utf8")).split("\n").forEach((l, i) => {
       if (!/new URL\([^)]*\)\s*\.pathname/.test(l)) return;
-      if (PARTAGES_AVEC_IDENTITE.includes(f)) { exemptes++; return; }
       fautifs.push(`${f}:${i + 1}  ${l.trim().slice(0, 80)}`);
     });
   }
 
+  /*
+   * PROVE THE SWEEP LOOKED. A guard in this repository caught this one: a test that walks a
+   * directory and asserts an empty result passes just as well when the walk found nothing —
+   * a wrong path, a renamed folder, a filter that stopped matching. **An unproven zero reads
+   * exactly like a success**, which is the fault this whole catalogue is about, committed
+   * inside a tool written to watch for it.
+   */
+  assert.ok(examines >= 5,
+    `only ${examines} source file(s) examined in ${ICI}: the sweep is not looking where it `
+    + "thinks it is, and its empty result means nothing.");
+
   assert.deepEqual(fautifs, [],
     "`.pathname` keeps the percent-encoding: use `fileURLToPath(new URL(...))`.\n  "
     + fautifs.join("\n  "));
-
-  assert.ok(exemptes > 0,
-    "the four files shared with `identite` no longer carry the pattern — drop the exclusion "
-    + "list rather than keeping an exemption that exempts nothing.");
 });

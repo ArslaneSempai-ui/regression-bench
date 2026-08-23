@@ -9,6 +9,7 @@
 import { mkdirSync, readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { brancherStore } from "./bench.ts";
 import type { Run } from "./bench.ts";
+import { fileURLToPath } from "node:url";
 
 const DIRECTORY = fileURLToPath(new URL("../data/runs", import.meta.url));
 
