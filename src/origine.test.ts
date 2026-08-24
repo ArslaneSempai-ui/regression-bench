@@ -126,6 +126,31 @@ test("sans en-tête Origin, la requête passe — curl, un test, un formulaire m
   } finally { s.arreter(); }
 });
 
+test("un paramètre vide vaut le défaut, pas la borne basse", async (t) => {
+  /*
+   * LA BORNE ETAIT LE MASQUE, PAS LA PARADE.
+   *
+   * `Number("")` et `Number("   ")` valent ZERO, pas NaN. Zéro passe `Number.isFinite`, et
+   * un clamp le range sagement sur la borne basse — donc `?runs=` ne retombait pas sur le
+   * défaut de huit, il tombait à un, sans un mot. **Un 1 silencieux se lit comme un choix**,
+   * ce qui rend le défaut plus difficile à voir que s'il n'y avait pas eu de borne du tout.
+   *
+   * Le cas est ici parce qu'il a été trouvé six heures après avoir été écrit, par une règle
+   * de catalogue venue d'un autre dépôt. Une garde posée le soir même n'est pas une garde
+   * éprouvée.
+   */
+  const s = await demarrer();
+  try {
+    for (const q of ["", "%20%20", "abc"]) {
+      const r = await fetch(`http://${s.hote}/api/stability?runs=${q}`, { method: "POST" });
+      const corps = await r.json() as { runs?: number };
+      assert.equal(corps.runs, 8,
+        `runs=${JSON.stringify(q)} doit valoir le défaut 8, pas la borne basse — sinon un `
+        + "paramètre vide se lit comme un choix délibéré de tourner une seule fois");
+    }
+  } finally { s.arreter(); }
+});
+
 test("le nombre de tours reçu est borné", async (t) => {
   const s = await demarrer();
   try {

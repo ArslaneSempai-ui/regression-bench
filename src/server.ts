@@ -154,10 +154,29 @@ const serveur = createServer(async (req, res) => {
        * largement ce qu'on demande à la main — et elle est dite plutôt que silencieuse :
        * une valeur rabotée sans un mot fait chercher pourquoi le résultat ne bouge plus.
        */
-      const demande = Number(url.searchParams.get("runs") ?? 8);
-      const runs = Number.isFinite(demande) ? Math.min(Math.max(1, Math.trunc(demande)), 25) : 8;
-      if (runs !== demande) {
-        console.warn(`  runs=${url.searchParams.get("runs")} ramené à ${runs} — borne 1..25`);
+      /*
+       * LA BORNE ETAIT LE MASQUE, PAS LA PARADE. Mesure sur mon propre code, six heures
+       * apres l'avoir ecrit :
+       *
+       *   ?runs=        -> 1      alors que l'absence donne 8
+       *   ?runs=%20%20  -> 1      idem
+       *
+       * `Number("")` et `Number("   ")` valent ZERO, pas NaN. Zero passe `isFinite`, et le
+       * clamp le range sagement sur la borne basse — donc un parametre vide ne retombe pas
+       * sur le defaut, il tombe au minimum, sans un mot. **La borne rendait le defaut
+       * invisible en le rendant plausible**, ce qui est pire que de ne pas l'avoir : un 1
+       * silencieux se lit comme un choix.
+       *
+       * On regarde donc la CHAINE avant de convertir. Vide, blanche ou non numerique
+       * signifie « non fourni » et vaut le defaut ; un nombre hors borne est ramene ET
+       * annonce.
+       */
+      const brut = url.searchParams.get("runs");
+      const fourni = brut !== null && brut.trim() !== "" && Number.isFinite(Number(brut));
+      const demande = fourni ? Number(brut) : 8;
+      const runs = Math.min(Math.max(1, Math.trunc(demande)), 25);
+      if (fourni && runs !== demande) {
+        console.warn(`  runs=${brut} ramené à ${runs} — borne 1..25`);
       }
       const toutes = [];
       for (const [name, system] of Object.entries(VERSIONS)) {
