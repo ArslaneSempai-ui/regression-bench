@@ -153,6 +153,10 @@ test("the stakes citation is real and reproduced exactly", () => {
    * figure edited on the page and nowhere else — would leave the argument standing on
    * nothing, which is the failure this repository exists to complain about.
    */
+  /* piege:ok-cas compte-non-tenu — le « 10 » relevé ici n'est pas un compte annoncé par un
+     message : c'est la VALEUR ATTENDUE d'un délai réglementaire, « 10 business days », et la
+     ligne qui le porte est précisément celle qui l'impose. Le tenir davantage n'a pas de
+     sens ; le reformuler le détacherait du texte de loi qu'il reproduit. */
   const r = REGULATIONS.blockedPropertyReport;
   assert.equal(r.cite, "31 CFR 501.603(b)(1)");
   assert.equal(r.figure, "10 business days");

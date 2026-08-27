@@ -104,5 +104,5 @@ if (isMain(import.meta)) {
      calculé. Les deux divergent le jour où la sérialisation change. */
   const { REFERENCE_STABILITE } = await import(CIBLE + `?t=${Date.now()}`);
   writeFileSync(RELEVE, relevePublie(REFERENCE_STABILITE as Releve));
-  console.log(`stabilité figée sur ${tours} tours → src/reference-stabilite.ts + releve-stabilite.json`);
+  console.log(`stability frozen over ${tours} rounds → src/reference-stabilite.ts + releve-stabilite.json`);
 }

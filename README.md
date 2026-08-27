@@ -41,7 +41,7 @@ a watchlist. Four successive versions, each one a change any engineer would defe
 Read the rate column and v3 is the winner. Now ask the bench what actually happened
 between v2 and v3:
 
-![Comparing two versions](images/comparison.png)
+![Comparing v2-normalise against v3-approximatif](images/comparison.png)
 
 <!-- figures:verdict -->
 ```
@@ -256,7 +256,7 @@ compliance decision, not a technical one — the bench's job is to make sure som
 it deliberately rather than by watching an average.
 
 **Not "22 cases is enough."** It is enough to catch a named regression, which is all this
-tool claims. It is nowhere near enough to rank two versions by rate, and the interval on
+tool claims. It is nowhere near enough to rank one version against another by rate, and the interval on
 every rate on the page exists to say so out loud.
 
 **Not "a stable version is a correct one."** Stability measures whether a system gives the
