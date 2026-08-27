@@ -23,13 +23,46 @@
  */
 
 import { writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { measureStability } from "./stability.ts";
 import { VERSIONS } from "./screening.ts";
 import { CASES } from "./cases.ts";
 import { isMain, arg } from "./cli.ts";
+import { entierBorne } from "./nombre.ts";
 import { fileURLToPath } from "node:url";
 
 const CIBLE = fileURLToPath(new URL("./reference-stabilite.ts", import.meta.url));
+
+/**
+ * LE RELEVÉ, EN CLAIR ET SCELLÉ — parce qu'une page publie ses chiffres.
+ *
+ * `reference-stabilite.ts` est un module TypeScript : la page en sert la version compilée,
+ * et refaire la mesure sans reconstruire la page publie des chiffres périmés dont toutes
+ * les empreintes de sources concordent. Il faut donc un point de comparaison qui vive
+ * HORS de la chaîne de construction — écrit ici, lu par `pages.ts`, contrôlé par
+ * `demo.test.ts`.
+ *
+ * L'empreinte porte la mesure elle-même, pas le fichier qui la transporte : un commentaire
+ * réécrit au-dessus de la constante ne doit pas déclarer la page périmée.
+ */
+export const RELEVE = fileURLToPath(new URL("../releve-stabilite.json", import.meta.url));
+
+export type Releve = { mesureLe: string; tours: number; versions: Record<string, unknown> };
+
+export function empreinteDe(releve: Releve): string {
+  return createHash("sha256")
+    .update(JSON.stringify({ mesureLe: releve.mesureLe, tours: releve.tours, versions: releve.versions }))
+    .digest("hex");
+}
+
+export function relevePublie(releve: Releve): string {
+  return JSON.stringify({
+    mesureLe: releve.mesureLe,
+    tours: releve.tours,
+    versions: Object.keys(releve.versions).length,
+    empreinte: empreinteDe(releve),
+  }, null, 2) + "\n";
+}
 
 export async function figer(tours: number): Promise<string> {
   const versions: Record<string, { passesParCas: Record<string, number>; taux: { bas: number; haut: number; moyen: number } }> = {};
@@ -60,7 +93,16 @@ export const REFERENCE_STABILITE = ${JSON.stringify({ mesureLe: new Date().toISO
 }
 
 if (isMain(import.meta)) {
-  const tours = Number(arg(2) ?? 400);
-  writeFileSync(CIBLE, await figer(tours));
-  console.log(`stabilité figée sur ${tours} tours → src/reference-stabilite.ts`);
+  /* Zéro tour écrirait un relevé de référence dont chaque étendue vaut [Infinity, -Infinity],
+     et la page publierait ça. Voir nombre.ts. */
+  const tours = entierBorne(arg(2), 400).valeur;
+  const source = await figer(tours);
+  writeFileSync(CIBLE, source);
+
+  /* Le relevé est relu depuis le module qu'on vient d'écrire, pas depuis les objets en
+     mémoire : l'empreinte doit décrire ce que le dépôt PORTE, pas ce que ce processus a
+     calculé. Les deux divergent le jour où la sérialisation change. */
+  const { REFERENCE_STABILITE } = await import(CIBLE + `?t=${Date.now()}`);
+  writeFileSync(RELEVE, relevePublie(REFERENCE_STABILITE as Releve));
+  console.log(`stabilité figée sur ${tours} tours → src/reference-stabilite.ts + releve-stabilite.json`);
 }

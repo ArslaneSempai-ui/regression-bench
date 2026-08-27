@@ -8,13 +8,24 @@ import { runAll } from "./run.ts";
 import { VERSIONS } from "./screening.ts";
 import { REFERENCE_STABILITE } from "./reference-stabilite.ts";
 import { CASES } from "./cases.ts";
+import { entierBorne } from "./nombre.ts";
 import { fileURLToPath } from "node:url";
 
 /* Runs persist to disk when the bench is driven from Node; the browser build keeps
  * them in memory instead — see `bench.ts`. */
 brancherDisque();
 
-const PORT = Number(process.env.PORT ?? 4600);
+/*
+ * `PORT=` — POSÉE ET VIDE — N'EST PAS `PORT` ABSENTE.
+ *
+ * `??` ne se déclenche que sur `null`/`undefined` ; une variable d'environnement posée sans
+ * valeur rend `""`, et `Number("")` vaut ZÉRO. `listen(0)` demande à l'OS un port libre au
+ * hasard : le serveur démarre, la console annonce `http://localhost:0`, et l'écran est
+ * servi ailleurs. Rien n'échoue — on cherche juste pourquoi l'adresse ne répond pas.
+ *
+ * `PORT= npm start`, ou un `.env` dont la ligne a perdu sa valeur, suffit.
+ */
+const PORT = entierBorne(process.env.PORT, 4600, 1, 65535).valeur;
 
 function json(res: ServerResponse, body: unknown, code = 200): void {
   const payload = JSON.stringify(body);
@@ -171,11 +182,12 @@ const serveur = createServer(async (req, res) => {
        * signifie « non fourni » et vaut le defaut ; un nombre hors borne est ramene ET
        * annonce.
        */
+      /* La lecture vit dans `nombre.ts` : le serveur avait été réparé et la démo publiée
+         portait encore la faute, sur la même route et le même paramètre. */
       const brut = url.searchParams.get("runs");
-      const fourni = brut !== null && brut.trim() !== "" && Number.isFinite(Number(brut));
-      const demande = fourni ? Number(brut) : 8;
-      const runs = Math.min(Math.max(1, Math.trunc(demande)), 25);
-      if (fourni && runs !== demande) {
+      const lu = entierBorne(brut, 8, 1, 25);
+      const runs = lu.valeur;
+      if (lu.ramene) {
         console.warn(`  runs=${brut} ramené à ${runs} — borne 1..25`);
       }
       const toutes = [];

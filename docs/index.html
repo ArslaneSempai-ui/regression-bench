@@ -39,6 +39,7 @@ import { REFERENCE_STABILITE } from "./js/reference-stabilite.js";
 import { VERSIONS } from "./js/screening.js";
 import { compare } from "./js/diff.js";
 import { measureStability } from "./js/stability.js";
+import { entierBorne } from "./js/nombre.js";
 
 const byCase = Object.fromEntries(CASES.map((c) => [c.id, { input: c.input, why: c.why }]));
 const summary = () => runs().map((e) => ({
@@ -95,7 +96,10 @@ window.LOCAL = async (chemin, methode) => {
 
   if (chemin.startsWith("/api/stability")) {
     const q = new URLSearchParams(chemin.split("?")[1] ?? "");
-    const rounds = Number(q.get("runs") ?? 8);
+    /* Meme lecture que le serveur, et pour la meme raison : "?runs=" donnait ZERO tour,
+       donc aucun cas observe, donc les quatre versions annoncees stables. Bornee aussi :
+       la mesure tourne ici dans l onglet du visiteur. */
+    const rounds = entierBorne(q.get("runs"), 8, 1, 25).valeur;
     const versions = [];
     for (const [name, system] of Object.entries(VERSIONS)) {
       versions.push(await measureStability(name, system, CASES, rounds));

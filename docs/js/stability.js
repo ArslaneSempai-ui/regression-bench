@@ -13,6 +13,7 @@
  */
 import { run } from "./bench.js";
 import { isMain, arg } from "./cli.js";
+import { entierBorne } from "./nombre.js";
 import { VERSIONS } from "./screening.js";
 import { CASES } from "./cases.js";
 export async function measureStability(version, system, cases, rounds = 5, judge) {
@@ -43,7 +44,8 @@ export async function measureStability(version, system, cases, rounds = 5, judge
     };
 }
 if (isMain(import.meta)) {
-    const rounds = Number(arg(2) ?? 5);
+    /* `npm run stability -- ""` donnait zéro tour, donc « stable » partout — voir nombre.ts. */
+    const rounds = entierBorne(arg(2), 5).valeur;
     console.log(`\nStability over ${rounds} rounds — ${CASES.length} cases\n`);
     for (const [name, system] of Object.entries(VERSIONS)) {
         const s = await measureStability(name, system, CASES, rounds);

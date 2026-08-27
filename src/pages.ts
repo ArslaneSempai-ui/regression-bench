@@ -14,11 +14,39 @@
  * `window.LOCAL` shim answering the same routes with the same shapes.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { isMain } from "./cli.ts";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+
+const empreinte = (chemin: string): string =>
+  createHash("sha256").update(readFileSync(chemin)).digest("hex");
+
+/**
+ * UN REMPLACEMENT QUI NE TROUVE RIEN NE LÈVE PAS — IL RÉÉCRIT LE FICHIER INCHANGÉ.
+ *
+ * `String.replace` sur un motif absent rend la chaîne telle quelle, sans un mot. Les trois
+ * remplacements de cette construction transforment des chemins ABSOLUS (`/registre.css`,
+ * `/graphes.js`) en chemins relatifs, parce que GitHub Pages sert ce dépôt sous
+ * `/regression-bench/` et non à la racine. Le jour où une ancre est renommée dans
+ * `ui.html`, la page se construit sans erreur, se publie, et le navigateur reçoit deux 404 :
+ * la feuille de style et le module des figures. L'écran s'affiche nu et personne ne le voit
+ * depuis une machine locale, où les mêmes chemins absolus sont justes.
+ *
+ * La construction refuse donc au lieu de rendre une page muette.
+ */
+function remplacer(html: string, cherche: string, par: string, quoi: string): string {
+  if (!html.includes(cherche)) {
+    throw new Error(
+      `construction de la page : ${quoi} introuvable dans src/ui.html (\`${cherche}\`).\n`
+      + "  Le remplacement aurait rendu le fichier inchangé et la construction aurait réussi :\n"
+      + "  la page publiée partirait avec un chemin absolu qui vaut 404 sous GitHub Pages.\n"
+      + "  → réaligner l'ancre dans src/ui.html, ou ce motif sur l'ancre.");
+  }
+  return html.replace(cherche, par);
+}
 
 const SHIM = `<script>window.LOCAL_PRET = new Promise((r) => { window.LOCAL_POSE = r; });</script>\n<script type="module">
 import { run, save, load, runs } from "./js/bench.js";
@@ -27,6 +55,7 @@ import { REFERENCE_STABILITE } from "./js/reference-stabilite.js";
 import { VERSIONS } from "./js/screening.js";
 import { compare } from "./js/diff.js";
 import { measureStability } from "./js/stability.js";
+import { entierBorne } from "./js/nombre.js";
 
 const byCase = Object.fromEntries(CASES.map((c) => [c.id, { input: c.input, why: c.why }]));
 const summary = () => runs().map((e) => ({
@@ -83,7 +112,10 @@ window.LOCAL = async (chemin, methode) => {
 
   if (chemin.startsWith("/api/stability")) {
     const q = new URLSearchParams(chemin.split("?")[1] ?? "");
-    const rounds = Number(q.get("runs") ?? 8);
+    /* Meme lecture que le serveur, et pour la meme raison : "?runs=" donnait ZERO tour,
+       donc aucun cas observe, donc les quatre versions annoncees stables. Bornee aussi :
+       la mesure tourne ici dans l onglet du visiteur. */
+    const rounds = entierBorne(q.get("runs"), 8, 1, 25).valeur;
     const versions = [];
     for (const [name, system] of Object.entries(VERSIONS)) {
       versions.push(await measureStability(name, system, CASES, rounds));
@@ -105,18 +137,103 @@ sanctions list runs to hundreds of thousands of entries and cannot be published.
 <a href="https://github.com/ArslaneSempai-ui/regression-bench">Source and method</a>.
 </p>`;
 
+/** Le relevé daté dont la page tire sa grille — voir `figer-stabilite.ts`. */
+export const RELEVE = "releve-stabilite.json";
+
+/**
+ * SCELLER CE QUI EST PUBLIÉ, PAS SEULEMENT CE QUI L'A PRODUIT.
+ *
+ * `demo.test.ts` — la couche partagée — sait contrôler trois choses, et n'en contrôlait
+ * AUCUNE ici : il cherche `docs/.sources.json`, ne le trouve pas, et le dit par un
+ * `t.diagnostic`. Un diagnostic est vert. Relevé le 27/08/2026 : cinq cas passés, une ligne
+ * d'information noyée dans une suite de quatre-vingts secondes, et les neuf modules que le
+ * navigateur charge réellement (`docs/js/*.js`) n'étaient tenus par rien.
+ *
+ * Ce que le manifeste ferme, et que rien d'autre ne fermait :
+ *
+ *  - `empreintes` — la source a-t-elle bougé depuis la construction ? Les fichiers COPIÉS
+ *    verbatim se comparent octet pour octet à leur homonyme de `src/` ; les fichiers
+ *    COMPILÉS n'ont pas d'homonyme, donc rien ne les regardait.
+ *  - `publies` — le fichier que le navigateur charge est-il celui qu'on a construit ? Une
+ *    ligne ajoutée à la main dans `docs/js/screening.js` ne fait bouger aucune source.
+ *  - `releve` — les chiffres de la page viennent-ils de la mesure que le dépôt porte
+ *    aujourd'hui ? La grille est une mesure datée ; refaire la mesure sans refaire la page
+ *    publie des chiffres périmés dont toutes les autres empreintes concordent.
+ *
+ * Le relevé est écrit par `npm run figer`, pas ici : un manifeste qui scellerait un fichier
+ * que la même construction vient d'écrire ne traverserait aucune couture et ne pourrait
+ * jamais tomber.
+ */
+function sceller(docs: string): void {
+  const releve = root + RELEVE;
+  if (!existsSync(releve)) {
+    throw new Error(
+      `construction de la page : ${RELEVE} est absent.\n`
+      + "  La page publie la grille d'une mesure datée, et rien ne relierait ces chiffres à\n"
+      + "  cette mesure. → `npm run figer` l'écrit en même temps que src/reference-stabilite.ts.");
+  }
+  const { empreinte: empreinteReleve } = JSON.parse(readFileSync(releve, "utf8")) as { empreinte?: string };
+  if (typeof empreinteReleve !== "string") {
+    throw new Error(`${RELEVE} ne porte pas de champ \`empreinte\` : il ne scelle rien.`);
+  }
+
+  /* Les modules COMPILÉS, déduits de ce que `tsc -p tsconfig.web.json` a réellement émis —
+     pas d'une liste écrite à la main, qui figerait la construction d'aujourd'hui. */
+  const modules = existsSync(docs + "/js")
+    ? readdirSync(docs + "/js").filter((f) => f.endsWith(".js")).sort()
+    : [];
+
+  const empreintes: Record<string, string> = {};
+  for (const js of modules) {
+    const ts = root + "src/" + js.replace(/\.js$/, ".ts");
+    if (existsSync(ts)) empreintes["js/" + js] = empreinte(ts);
+  }
+  if (Object.keys(empreintes).length < 2) {
+    throw new Error(
+      `construction de la page : ${Object.keys(empreintes).length} module(s) compilé(s) apparié(s) `
+      + "à une source.\n  Le manifeste ne couvrirait plus la construction, et un contrôle qui "
+      + "n'examine presque rien passerait toujours.\n  → `tsc -p tsconfig.web.json` a-t-il tourné "
+      + "avant cette étape ? (voir le script `pages` de package.json)");
+  }
+
+  const servis = ["index.html", "registre.css", "graphes.js", ...modules.map((f) => "js/" + f)];
+  const publies: Record<string, string> = {};
+  for (const rel of servis) {
+    if (existsSync(docs + "/" + rel)) publies[rel] = empreinte(docs + "/" + rel);
+  }
+
+  writeFileSync(docs + "/.sources.json", JSON.stringify({
+    construitLe: new Date().toISOString(),
+    empreintes,
+    publies,
+    releve: { attendu: RELEVE, empreinte: empreinteReleve },
+  }, null, 2) + "\n");
+}
+
 export function build(): void {
   const docs = root + "docs";
   mkdirSync(docs, { recursive: true });
 
   let html = readFileSync(root + "src/ui.html", "utf8");
-  html = html.replace('href="/registre.css"', 'href="registre.css"');
-  html = html.replace('from "/graphes.js"', 'from "./graphes.js"');
+  html = remplacer(html, 'href="/registre.css"', 'href="registre.css"', "le lien de la feuille de style");
+  html = remplacer(html, 'from "/graphes.js"', 'from "./graphes.js"', "l'import du module des figures");
 
   const header = html.indexOf('class="haut"');
-  const closes = html.indexOf("\n  </div>", header) + "\n  </div>".length;
+  if (header < 0) {
+    throw new Error(
+      "construction de la page : l'en-tête `class=\"haut\"` est introuvable dans src/ui.html.\n"
+      + "  `indexOf` rend -1, et `indexOf(x, -1)` repart de zéro : la bannière serait insérée\n"
+      + "  au premier `</div>` de la page, c'est-à-dire n'importe où, sans erreur.");
+  }
+  const finEntete = html.indexOf("\n  </div>", header);
+  if (finEntete < 0) {
+    throw new Error(
+      "construction de la page : l'en-tête de src/ui.html ne se referme pas sur `\\n  </div>`.\n"
+      + "  Sans cette borne la bannière serait découpée à l'octet 8, au milieu du doctype.");
+  }
+  const closes = finEntete + "\n  </div>".length;
   html = html.slice(0, closes) + "\n" + BANNER + html.slice(closes);
-  html = html.replace('<script type="module">', SHIM + '<script type="module">');
+  html = remplacer(html, '<script type="module">', SHIM + '<script type="module">', "le script de l'écran");
   writeFileSync(docs + "/index.html", html);
 
   cpSync(root + "src/registre.css", docs + "/registre.css");
@@ -124,6 +241,7 @@ export function build(): void {
   if (existsSync(root + "images")) cpSync(root + "images", docs + "/images", { recursive: true });
   writeFileSync(docs + "/.nojekyll", "");
 
+  sceller(docs);
   console.log("docs/ built — commit it and enable GitHub Pages on the docs folder");
 }
 
