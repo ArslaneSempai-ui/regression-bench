@@ -16,7 +16,7 @@ npm start          # the comparison screen, on localhost:4600
 npm run run-all    # run every version
 npm run compare -- v2-normalise v3-approximatif
 npm run stability  # the same system, several times over
-npm test           # types, README figures, and <!--p:portfolio.parDepot.banc-->71<!--/p--> tests
+npm test           # types, README figures, and <!--p:portfolio.parDepot.banc-->73<!--/p--> tests
 ```
 
 Everything runs locally. No API key, nothing leaves the machine, and anyone who clones this
