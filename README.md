@@ -129,17 +129,24 @@ comparison, and the screen says so instead of quietly averaging over whatever ov
 
 ## The case set is the real asset
 
-Twenty-two cases, and **every one of them carries a written reason for existing**, in both
-languages. It's the most useful rule in the project: a case nobody can justify gets
-deleted the day it becomes inconvenient — usually by the person who just introduced the
-bug it was catching.
+<!-- figures:composition -->
+| The set | Count |
+|---|---|
+| Cases, each with a written reason in both languages | 22 |
+| **Negative** cases — names that must *not* match | 8 |
+| Cases no version gets right | 1 (`accent-01`) |
+| Versions under test | 4 |
+<!-- /figures:composition -->
 
-Seven of the twenty-two are **negative** cases, names that must *not* match. A set made
-only of expected hits rewards a system that says yes to everything, and that system will
-score beautifully.
+**Every one of them carries a written reason for existing**, in both languages. It's the
+most useful rule in the project: a case nobody can justify gets deleted the day it becomes
+inconvenient — usually by the person who just introduced the bug it was catching.
 
-One case, `accent-01`, fails in all four versions. It's left in deliberately: a bench that
-only contains problems already solved tells you nothing about the ones ahead.
+The negative cases are there because a set made only of expected hits rewards a system that
+says yes to everything, and that system will score beautifully.
+
+The case no version gets right is left in deliberately: a bench that only contains problems
+already solved tells you nothing about the ones ahead.
 
 ---
 
@@ -219,7 +226,7 @@ The watchlist and every name in it are fictional.
 
 - **No LLM adapters shipped.** The harness takes any function; wiring a model to it is a
   few lines, but nothing here pretends to have measured one.
-- **Small samples, and it says so.** Twenty-two cases put a ±14 point interval on any
+- **Small samples, and it says so.** <!--p:banc.cas-->22<!--/p--> cases put a ±<!--p:banc.demiIntervalle-->14<!--/p--> point interval on any
   rate quoted here. The bench reports that interval rather than hiding it, and refuses to
   call a rate difference an improvement when the case set cannot support the claim. What
   it does *not* do is tell you how many cases you would need — that depends on the effect

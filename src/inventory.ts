@@ -15,12 +15,29 @@
 
 import { CASES } from "./cases.ts";
 import { VERSIONS, TOLERANCE, BUDGET_MS, WATCHLIST } from "./screening.ts";
+import { precision } from "./interval.ts";
 import { ALL } from "./regulations.ts";
 import type { Regulation } from "./regulations.ts";
 import type { Inventory } from "./provenance.ts";
 
 /** The section the system under test is held to — not everything the shared file holds. */
 export const CITED: Regulation[] = ALL.filter((r) => /501\.603/.test(r.cite));
+
+/*
+ * LE DEMI-INTERVALLE SE CALCULE, IL NE SE TAPE PAS — Y COMPRIS ICI.
+ *
+ * Cette note part sur la page, dans la table de provenance, à côté d'un `CASES.length` qui
+ * est calculé. Le « ±14 » qui la suivait était écrit à la main : le jour où le jeu de cas
+ * grandit, le compte à sa gauche bouge et l'intervalle à sa droite reste, dans la ligne même
+ * qui explique au lecteur qu'un taux ne se cite jamais sans son intervalle.
+ *
+ * `readme.ts` calcule déjà ce nombre pour le paragraphe du verdict. Deux chemins écrivaient
+ * la même grandeur et un seul la dérivait ; c'est toujours l'autre qu'on garde.
+ *
+ * Pris à 85 % de réussite — la hauteur des taux que ce banc publie — parce qu'un
+ * demi-intervalle dépend de la proportion autant que de la taille de l'échantillon.
+ */
+const DEMI_INTERVALLE = Math.round(precision(Math.round(CASES.length * 0.85), CASES.length));
 
 export const INVENTORY: Inventory = [
   ...CITED.map((r) => ({
@@ -47,7 +64,7 @@ export const INVENTORY: Inventory = [
     name: "passRate",
     provenance: "measured",
     what: "share of cases a version gets right",
-    note: `always with its 95 % interval: ${CASES.length} cases put roughly ±14 points around any of them`,
+    note: `always with its 95 % interval: ${CASES.length} cases put roughly ±${DEMI_INTERVALLE} points around any of them`,
   },
   {
     name: "paired verdict",

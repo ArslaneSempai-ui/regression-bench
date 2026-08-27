@@ -13,6 +13,8 @@ import { compare } from "./diff.ts";
 import { rate, writeRate } from "./interval.ts";
 import { INVENTORY, CITED } from "./inventory.ts";
 import { markdown } from "./provenance.ts";
+import { CASES } from "./cases.ts";
+import { REFERENCE_STABILITE } from "./reference-stabilite.ts";
 
 import { run as emit, table } from "./figures.ts";
 import { fileURLToPath } from "node:url";
@@ -75,6 +77,39 @@ const versions = table(
   }),
 );
 
+/*
+ * CE QUE LE JEU DE CAS CONTIENT — COMPTÉ, PAS ÉCRIT.
+ *
+ * La page annonçait « Seven of the twenty-two are negative cases ». Le jeu en porte HUIT,
+ * et la phrase était fausse depuis le premier commit (b6cc09e, 17/08/2026). Rien ne pouvait
+ * la voir : le seul cas qui regarde les négatifs vérifie une PROPORTION — au moins trois
+ * dixièmes — et 8/22 la satisfait aussi bien que 7/22. Un compte écrit en toutes lettres
+ * passe sous tous les contrôles de chiffres, et celui-ci vivait sur la page d'un dépôt dont
+ * la thèse entière est qu'un chiffre non tenu finit par mentir.
+ *
+ * Les trois autres comptes de ce paragraphe — le total, les versions, le cas qu'aucune
+ * version ne réussit — étaient justes et tenus par rien. Ils sont ici pour la même raison :
+ * ce n'est pas d'être faux qui les qualifie, c'est de pouvoir le devenir en silence.
+ *
+ * Le cas jamais réussi se lit sur le relevé DE RÉFÉRENCE et non sur une exécution du
+ * moment : une des versions court après une horloge, et un tirage la ferait entrer et
+ * sortir de ce compte au gré de la charge de la machine.
+ */
+const composition = (() => {
+  const versions = Object.entries(REFERENCE_STABILITE.versions);
+  const jamais = CASES.filter((c) =>
+    versions.every(([, v]) => (v.passesParCas as Record<string, number>)[c.id] === 0));
+  const negatifs = CASES.filter((c) => c.expected === null).length;
+  return table(["The set", "Count"], [
+    ["Cases, each with a written reason in both languages", CASES.length],
+    ["**Negative** cases — names that must *not* match", negatifs],
+    ["Cases no version gets right", jamais.length === 0
+      ? "0"
+      : `${jamais.length} (${jamais.map((c) => `\`${c.id}\``).join(", ")})`],
+    ["Versions under test", versions.length],
+  ]);
+})();
+
 const before = load("v2-normalise"), after = load("v3-approximatif");
 const c = before && after ? compare(before, after) : null;
 
@@ -126,4 +161,5 @@ const finding = (() => {
     `dashboard renders them identically.`;
 })();
 
-emit(fileURLToPath(new URL("../README.md", import.meta.url)), { finding, versions, verdict, stakes, provenance });
+emit(fileURLToPath(new URL("../README.md", import.meta.url)),
+  { finding, versions, composition, verdict, stakes, provenance });
