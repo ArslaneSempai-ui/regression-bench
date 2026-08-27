@@ -104,14 +104,15 @@ control.
 thinks of as a behaviour change: fuzzy search is expensive, so it gets a time budget and
 falls back to exact matching when the budget runs out. It ships as an *optimisation*.
 
-Running the same cases eight times:
+Running the same cases five times, which is what `npm run stability` does:
 
 ```
-v4-sous-budget     4 unstable case(s)
-    faute-01 : 7/8 — outputs seen: null, "Amina Haddad"
-    faute-02 : 7/8 — outputs seen: null, "Olga Petrova"
-    court-02 : 1/8 — outputs seen: "Li Wei", null
+v4-sous-budget     1 unstable case(s)
+    faute-02 : 4/5 — outputs seen: "Olga Petrova", null
 ```
+
+Which cases come up unstable moves between runs — that is the finding, not a
+defect in the example.
 
 Under load, the same customer is screened differently. Every later comparison would report
 regressions and gains that have nothing to do with the code, and the team would learn to
@@ -260,7 +261,8 @@ tool claims. It is nowhere near enough to rank one version against another by ra
 every rate on the page exists to say so out loud.
 
 **Not "a stable version is a correct one."** Stability measures whether a system gives the
-same answer twice. `v1-exact` is perfectly stable and wrong about most things.
+same answer twice. `v1-exact` is perfectly stable, the weakest of the four, and still
+fails two cases in five.
 
 ---
 
