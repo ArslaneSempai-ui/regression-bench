@@ -40,10 +40,11 @@ const empreinte = (chemin: string): string =>
 function remplacer(html: string, cherche: string, par: string, quoi: string): string {
   if (!html.includes(cherche)) {
     throw new Error(
-      `construction de la page : ${quoi} introuvable dans src/ui.html (\`${cherche}\`).\n`
-      + "  Le remplacement aurait rendu le fichier inchangé et la construction aurait réussi :\n"
-      + "  la page publiée partirait avec un chemin absolu qui vaut 404 sous GitHub Pages.\n"
-      + "  → réaligner l'ancre dans src/ui.html, ou ce motif sur l'ancre.");
+      `building the page: ${quoi} not found in src/ui.html (\`${cherche}\`).\n`
+      + "  The replacement would have returned the file unchanged and the build would have\n"
+      + "  succeeded: the published page would ship an absolute path that is a 404 under\n"
+      + "  GitHub Pages.\n"
+      + "  -> realign the anchor in src/ui.html, or this pattern on the anchor.");
   }
   return html.replace(cherche, par);
 }
@@ -168,13 +169,13 @@ function sceller(docs: string): void {
   const releve = root + RELEVE;
   if (!existsSync(releve)) {
     throw new Error(
-      `construction de la page : ${RELEVE} est absent.\n`
-      + "  La page publie la grille d'une mesure datée, et rien ne relierait ces chiffres à\n"
-      + "  cette mesure. → `npm run figer` l'écrit en même temps que src/reference-stabilite.ts.");
+      `building the page: ${RELEVE} is missing.\n`
+      + "  The page publishes the grid of a dated measurement, and nothing would tie those\n"
+      + "  figures to it. -> `npm run figer` writes it alongside src/reference-stabilite.ts.");
   }
   const { empreinte: empreinteReleve } = JSON.parse(readFileSync(releve, "utf8")) as { empreinte?: string };
   if (typeof empreinteReleve !== "string") {
-    throw new Error(`${RELEVE} ne porte pas de champ \`empreinte\` : il ne scelle rien.`);
+    throw new Error(`${RELEVE} carries no \`empreinte\` field: it seals nothing.`);
   }
 
   /* Les modules COMPILÉS, déduits de ce que `tsc -p tsconfig.web.json` a réellement émis —
@@ -190,10 +191,10 @@ function sceller(docs: string): void {
   }
   if (Object.keys(empreintes).length < 2) {
     throw new Error(
-      `construction de la page : ${Object.keys(empreintes).length} module(s) compilé(s) apparié(s) `
-      + "à une source.\n  Le manifeste ne couvrirait plus la construction, et un contrôle qui "
-      + "n'examine presque rien passerait toujours.\n  → `tsc -p tsconfig.web.json` a-t-il tourné "
-      + "avant cette étape ? (voir le script `pages` de package.json)");
+      `building the page: ${Object.keys(empreintes).length} compiled module(s) paired with a `
+      + "source.\n  The manifest would no longer cover the build, and a check that examines "
+      + "almost nothing always passes.\n  -> did `tsc -p tsconfig.web.json` run before this step? "
+      + "(see the `pages` script in package.json)");
   }
 
   const servis = ["index.html", "registre.css", "graphes.js", ...modules.map((f) => "js/" + f)];
@@ -221,15 +222,15 @@ export function build(): void {
   const header = html.indexOf('class="haut"');
   if (header < 0) {
     throw new Error(
-      "construction de la page : l'en-tête `class=\"haut\"` est introuvable dans src/ui.html.\n"
-      + "  `indexOf` rend -1, et `indexOf(x, -1)` repart de zéro : la bannière serait insérée\n"
-      + "  au premier `</div>` de la page, c'est-à-dire n'importe où, sans erreur.");
+      "building the page: the `class=\"haut\"` header is not in src/ui.html.\n"
+      + "  `indexOf` returns -1, and `indexOf(x, -1)` restarts from zero: the banner would be\n"
+      + "  inserted at the page's first `</div>` — anywhere at all — without an error.");
   }
   const finEntete = html.indexOf("\n  </div>", header);
   if (finEntete < 0) {
     throw new Error(
-      "construction de la page : l'en-tête de src/ui.html ne se referme pas sur `\\n  </div>`.\n"
-      + "  Sans cette borne la bannière serait découpée à l'octet 8, au milieu du doctype.");
+      "building the page: the src/ui.html header does not close on `\\n  </div>`.\n"
+      + "  Without that bound the banner would be spliced in at byte 8, inside the doctype.");
   }
   const closes = finEntete + "\n  </div>".length;
   html = html.slice(0, closes) + "\n" + BANNER + html.slice(closes);
