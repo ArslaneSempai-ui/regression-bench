@@ -50,7 +50,7 @@ between v2 and v3:
     court-02: expected null, got "Li Wei"
   (3 gain(s) elsewhere — the rate moves 81.8 % -> 86.4 %,
    which does not buy back cases that had been validated once.)
-  the set cannot distinguish these versions by rate — judge the broken cases instead (5 discordant, p = 1.000)
+  The set cannot distinguish these versions by rate, so judge the broken cases instead (5 discordant, p = 1.000)
 ```
 
 Every rate on this page carries its interval because 22 cases put roughly
@@ -156,9 +156,9 @@ already solved tells you nothing about the ones ahead.
 <!-- figures:provenance -->
 **1 retrieved**, **5 measured**, **5 chosen**. What each kind means, and what you are entitled to ask of it:
 
-- **retrieved** — a public source says this, on the date recorded, in words linked from the page. *follow the link.*
-- **measured** — running the code in this repository produces it. *run it yourself — the draws are seeded.*
-- **chosen** — my judgement and nothing else. *check whether the sweep says it decides anything.*
+- **retrieved**: a public source says this, on the date recorded, in words linked from the page. *follow the link.*
+- **measured**: running the code in this repository produces it. *run it yourself; the draws are seeded.*
+- **chosen**: my judgement and nothing else. *check whether the sweep says it decides anything.*
 
 | Kind | Name | What it is | Note |
 |---|---|---|---|
