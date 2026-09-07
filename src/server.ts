@@ -188,7 +188,7 @@ const serveur = createServer(async (req, res) => {
       const lu = entierBorne(brut, 8, 1, 25);
       const runs = lu.valeur;
       if (lu.ramene) {
-        console.warn(`  runs=${brut} ramené à ${runs} — borne 1..25`);
+        console.warn(`  runs=${brut} ramené à ${runs}, borne 1..25`);
       }
       const toutes = [];
       for (const [name, system] of Object.entries(VERSIONS)) {

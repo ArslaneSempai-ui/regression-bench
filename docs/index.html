@@ -13,7 +13,7 @@
     <div><h1 id="h1"></h1><p class="lede" id="lede"></p></div>
   </div>
 <p class="renvoi" style="margin-bottom:1.5rem">
-This runs entirely in your browser — no server, no data leaves your machine, and the runs
+This runs entirely in your browser: no server, no data leaves your machine, and the runs
 you produce are yours alone. The watchlist and the 22 cases are <b>invented</b>; a real
 sanctions list runs to hundreds of thousands of entries and cannot be published.
 <a href="https://github.com/ArslaneSempai-ui/regression-bench">Source and method</a>.
@@ -154,13 +154,13 @@ const api = async (pathFor, methode) => {
 const T = {
     h1: "Regression bench",
     provenance: "Every figure on this page is <b>retrieved</b> from a public source, <b>measured</b> by running the code, <b>assumed</b> because nobody here can know it, or <b>chosen</b> by me. The README says which, one by one.",
-    lede: "A bench that doesn't hand you a score — it tells you what changed.",
+    lede: "A bench that doesn't hand you a score; it tells you what changed.",
     titreVersions: "The versions under test",
     versionsQuoi: (n) => `The same set of ${n} check cases, run against four successive versions of a name screening system matching against a sanctions list.`,
     relancer: "Re-run all four versions",
     titreComparaison: "What that release changed",
 
-    regression: (n) => `${n} regression${n > 1 ? "s" : ""} — change is suspect`,
+    regression: (n) => `${n} regression${n > 1 ? "s" : ""}: change is suspect`,
     regressionQuoi: (g, a, b) => g > 0
       ? `The rate moves from ${a} to ${b}, and yet cases that were validated no longer pass. A rising average doesn't buy back behaviour you can no longer explain.`
       : `The rate moves from ${a} to ${b}.`,
@@ -173,7 +173,7 @@ const T = {
 
     casses: "What stopped working", repares: "What works now",
     silent: (n) => `${n} case(s) with an unchanged verdict but a different output`,
-    jeuBouge: (a, r) => `Case set changed: ${a} added, ${r} removed — the comparison is partial.`,
+    jeuBouge: (a, r) => `Case set changed: ${a} added, ${r} removed; the comparison is partial.`,
 
     titreStabilite: "Stability",
     stabiliteQuoi: "A case that passes seven times out of eight isn't a case that passes.",
@@ -182,7 +182,7 @@ const T = {
     figDiffTitre: "Before, after",
     figDiffAria: "Two stacked bars: passed and failed cases of the before version, then of the after one.",
     segReussis: "passed", segEchoues: "failed",
-    figGrilleTitre: (n, v) => `${n} cases × ${v} versions — a hole in a column is a regression`,
+    figGrilleTitre: (n, v) => `${n} cases × ${v} versions: a hole in a column is a regression`,
     etendue: (a, b) => `${a} – ${b}`,
     mesureeLe: (d, t) => `Measured on ${d} over ${t} rounds and shipped with the page: one version races a clock, so re-running the measurement does not give the same answer twice.`,
     figGrilleAria: "Grid of cases by version. Each column is a case, each row a version. "
@@ -191,12 +191,12 @@ const T = {
     grilleCasse: "broken by this version", grilleRepare: "fixed by this version",
     grilleInstable: "unstable: does not always pass",
     grilleSuite: (v, repare, casse) => `<b>${v}</b> fixes ${repare} cases and breaks ${casse}`
-      + " — while its rate goes up. No rate says that; the grid says it without a word.",
+      + ", while its rate goes up. No rate says that; the grid says it without a word.",
     grilleRien: "No version breaks a case the previous one passed.",
-    grilleCommande: (avant, apres) => `Reading <b>${apres}</b> against <b>${avant}</b>. Take another row to read that release instead — the first has nothing before it.`,
+    grilleCommande: (avant, apres) => `Reading <b>${apres}</b> against <b>${avant}</b>. Take another row to read that release instead: the first has nothing before it.`,
     lancerStabilite: "Measure again over 8 runs",
     stable: "stable",
-    instable: (n, c, runs) => `${n} — ${c.caseId}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
+    instable: (n, c, runs) => `${n}, ${c.caseId}: ${c.passes}/${runs}, outputs seen: ${c.outputs.join(" / ")}`,
     toutStable: "Every version is stable.",
     aucuneMesure: "Not measured yet.",
     aucun: "none", calcul: "Measuring…",

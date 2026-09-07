@@ -52,7 +52,7 @@ export const INVENTORY: Inventory = [
     name: "regressions",
     provenance: "measured",
     what: "named cases that worked in one version and stopped in the next",
-    note: "a fact about the runs, not an estimate from them — it does not need an interval",
+    note: "a fact about the runs, not an estimate from them; it does not need an interval",
   },
   {
     name: "gains",
@@ -96,13 +96,13 @@ export const INVENTORY: Inventory = [
     name: "TOLERANCE",
     provenance: "chosen",
     what: "edit distance allowed, as a fraction of name length",
-    note: "15 % — the value that makes v3 buy typos and pay with two distinct people",
+    note: "15 %: the value that makes v3 buy typos and pay with two distinct people",
   },
   {
     name: "BUDGET_MS",
     provenance: "chosen",
     what: `the ${BUDGET_MS} ms per-name budget v4 falls back under`,
-    note: "chosen small enough that the fallback fires sometimes and not always — which is the point of v4",
+    note: "chosen small enough that the fallback fires sometimes and not always, which is the point of v4",
   },
   {
     name: "VERSIONS",

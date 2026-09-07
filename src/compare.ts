@@ -13,7 +13,7 @@ if (isMain(import.meta)) {
   if (!beforeName || !afterName) {
     const available = runs().map((e) => e.version);
     console.log("Usage : npm run compare -- <before> <after>");
-    console.log(available.length ? `Runs on record: ${available.join(", ")}` : "No run on record — start with: npm run run-all");
+    console.log(available.length ? `Runs on record: ${available.join(", ")}` : "No run on record. Start with: npm run run-all");
     process.exit(1);
   }
 

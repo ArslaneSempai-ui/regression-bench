@@ -70,9 +70,9 @@ const versions = table(
     const stable = DETERMINISTIC[r.version as keyof typeof DETERMINISTIC] !== false;
     return [
       `\`${r.version}\``,
-      WHAT[r.version] ?? "—",
+      WHAT[r.version] ?? "n/a",
       stable ? `${(x.rate * 100).toFixed(1)} %` : "**varies between runs**",
-      stable ? `[${(x.low * 100).toFixed(0)}–${(x.high * 100).toFixed(0)}]` : "—",
+      stable ? `[${(x.low * 100).toFixed(0)}–${(x.high * 100).toFixed(0)}]` : "n/a",
     ];
   }),
 );
@@ -102,7 +102,7 @@ const composition = (() => {
   const negatifs = CASES.filter((c) => c.expected === null).length;
   return table(["The set", "Count"], [
     ["Cases, each with a written reason in both languages", CASES.length],
-    ["**Negative** cases — names that must *not* match", negatifs],
+    ["**Negative** cases: names that must *not* match", negatifs],
     ["Cases no version gets right", jamais.length === 0
       ? "0"
       : `${jamais.length} (${jamais.map((c) => `\`${c.id}\``).join(", ")})`],
@@ -115,9 +115,9 @@ const c = before && after ? compare(before, after) : null;
 
 const verdict = c
   ? `\`\`\`
-✗ ${c.regressions.length} regression(s) — ${c.before} -> ${c.after}
+✗ ${c.regressions.length} regression(s): ${c.before} -> ${c.after}
 ${c.regressions.map((r) => `    ${r.caseId}: expected ${JSON.stringify(r.after.expected)}, got ${JSON.stringify(r.after.actual)}`).join("\n")}
-  (${c.gains.length} gain(s) elsewhere — the rate moves ${(c.rateBefore * 100).toFixed(1)} % -> ${(c.rateAfter * 100).toFixed(1)} %,
+  (${c.gains.length} gain(s) elsewhere: the rate moves ${(c.rateBefore * 100).toFixed(1)} % -> ${(c.rateAfter * 100).toFixed(1)} %,
    which does not buy back cases that had been validated once.)
   ${c.paired.note}${c.paired.p !== undefined ? ` (${c.paired.discordant} discordant, p = ${c.paired.p.toFixed(3)})` : ""}
 \`\`\`
@@ -139,7 +139,7 @@ is not a difference this set can establish.`
  */
 const stakes = table(
   ["Citation", "Requires", "Figure", "Retrieved"],
-  CITED.map((r) => [`[${r.cite}](${r.source})`, r.says, r.figure ?? "—", r.retrieved]),
+  CITED.map((r) => [`[${r.cite}](${r.source})`, r.says, r.figure ?? "n/a", r.retrieved]),
 );
 
 /* Where every number on this page came from. Generated, and guarded by a test. */
@@ -154,7 +154,7 @@ const provenance = markdown(INVENTORY, table);
 const finding = (() => {
   if (!c) return "**The finding.** Run `npm run run-all` to produce it.";
   return `**The finding.** Between two versions of a sanctions screener, the pass rate went ` +
-    `**up** — ${(c.rateBefore * 100).toFixed(1)} % to ${(c.rateAfter * 100).toFixed(1)} % — while ` +
+    `**up** (${(c.rateBefore * 100).toFixed(1)} % to ${(c.rateAfter * 100).toFixed(1)} %) while ` +
     `**${c.regressions.length} named case${c.regressions.length === 1 ? "" : "s"}** that had been ` +
     `validated stopped working. On ${all[0].total} cases the rate difference is inside the noise; ` +
     `the broken cases are not. One of those numbers is an estimate and the other is a fact, and a ` +

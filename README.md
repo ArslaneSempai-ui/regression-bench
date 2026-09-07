@@ -4,10 +4,10 @@ Most evaluation harnesses hand you a number. A number can't tell you that your p
 went up **while cases that used to work stopped working**.
 
 <!-- figures:finding -->
-**The finding.** Between two versions of a sanctions screener, the pass rate went **up** — 81.8 % to 86.4 % — while **2 named cases** that had been validated stopped working. On 22 cases the rate difference is inside the noise; the broken cases are not. One of those numbers is an estimate and the other is a fact, and a dashboard renders them identically.
+**The finding.** Between two versions of a sanctions screener, the pass rate went **up** (81.8 % to 86.4 %) while **2 named cases** that had been validated stopped working. On 22 cases the rate difference is inside the noise; the broken cases are not. One of those numbers is an estimate and the other is a fact, and a dashboard renders them identically.
 <!-- /figures:finding -->
 
-**[Try it in your browser →](https://arslanesempai-ui.github.io/regression-bench/)** — take a version's row on the grid and read what that release changed. The runs are yours and die with the tab.
+**[Try it in your browser →](https://arslanesempai-ui.github.io/regression-bench/)**. Take a version's row on the grid and read what that release changed. The runs are yours and die with the tab.
 
 ![Taking each version's row: the pass rate climbs while cases break underneath](images/versions.gif)
 
@@ -26,7 +26,7 @@ reproduces the numbers below.
 
 ## The demonstration
 
-The system under test is a **sanctions name screening** — match a customer's name against
+The system under test is a **sanctions name screening**: match a customer's name against
 a watchlist. Four successive versions, each one a change any engineer would defend:
 
 <!-- figures:versions -->
@@ -35,7 +35,7 @@ a watchlist. Four successive versions, each one a change any engineer would defe
 | `v1-exact` | literal string comparison | 59.1 % | [39–77] |
 | `v2-normalise` | case, accents, punctuation, word order | 81.8 % | [61–93] |
 | `v3-approximatif` | edit distance, for typos and transliterations | 86.4 % | [67–95] |
-| `v4-sous-budget` | v3 with a time budget, falling back to exact | **varies between runs** | — |
+| `v4-sous-budget` | v3 with a time budget, falling back to exact | **varies between runs** | n/a |
 <!-- /figures:versions -->
 
 Read the rate column and v3 is the winner. Now ask the bench what actually happened
@@ -45,10 +45,10 @@ between v2 and v3:
 
 <!-- figures:verdict -->
 ```
-✗ 2 regression(s) — v2-normalise -> v3-approximatif
+✗ 2 regression(s): v2-normalise -> v3-approximatif
     court-01: expected null, got "Li Wei"
     court-02: expected null, got "Li Wei"
-  (3 gain(s) elsewhere — the rate moves 81.8 % -> 86.4 %,
+  (3 gain(s) elsewhere: the rate moves 81.8 % -> 86.4 %,
    which does not buy back cases that had been validated once.)
   The set cannot distinguish these versions by rate, so judge the broken cases instead (5 discordant, p = 1.000)
 ```
@@ -58,8 +58,8 @@ Every rate on this page carries its interval because 22 cases put roughly
 <!-- /figures:verdict -->
 
 The two broken cases are not noise. They are two named inputs where a system that once
-told two people apart no longer does. That asymmetry — a rate you cannot trust beside
-facts you can — is the entire reason this tool reports movements rather than scores.
+told two people apart no longer does. That asymmetry (a rate you cannot trust beside
+facts you can) is the entire reason this tool reports movements rather than scores.
 
 Fuzzy matching bought three typo cases and paid with **two distinct people now
 indistinguishable**. On a short name, one character of tolerance is one character too
@@ -82,7 +82,7 @@ on the system under test.
 <!-- /figures:stakes -->
 
 A screener that stops matching a name does not lower a score. It fails to block property
-that should have been blocked, so the ten-day clock never starts — and nobody finds out
+that should have been blocked, so the ten-day clock never starts, and nobody finds out
 from a dashboard, because the pass rate went **up**. That is the exact failure this bench
 is built to make visible, and it is why "two named cases stopped working" outranks "the
 average improved".
@@ -96,7 +96,7 @@ can't be compared; a run can. That's the whole difference between "we're at 80 %
 "these seven cases stopped working".
 
 **Refuses to grade on the average.** Any regression makes the change suspect, whatever the
-rate did. A human can override that — but knowingly. `npm run compare` exits non-zero on
+rate did. A human can override that, but knowingly. `npm run compare` exits non-zero on
 a regression, so continuous integration can block on it. A report nobody opens is not a
 control.
 
@@ -108,16 +108,16 @@ Running the same cases five times, which is what `npm run stability` does:
 
 ```
 v4-sous-budget     1 unstable case(s)
-    faute-02 : 4/5 — outputs seen: "Olga Petrova", null
+    faute-02 : 4/5; outputs seen: "Olga Petrova", null
 ```
 
-Which cases come up unstable moves between runs — that is the finding, not a
+Which cases come up unstable moves between runs: that is the finding, not a
 defect in the example.
 
 Under load, the same customer is screened differently. Every later comparison would report
 regressions and gains that have nothing to do with the code, and the team would learn to
 ignore the bench. **Stability is the measurement to take first**, before comparing
-anything — and almost nobody takes it.
+anything, and almost nobody takes it.
 
 **Flags silent output changes.** Same verdict, different output. Usually harmless,
 occasionally the sign that a case is passing for the wrong reason and won't pass for much
@@ -134,14 +134,14 @@ comparison, and the screen says so instead of quietly averaging over whatever ov
 | The set | Count |
 |---|---|
 | Cases, each with a written reason in both languages | 22 |
-| **Negative** cases — names that must *not* match | 8 |
+| **Negative** cases: names that must *not* match | 8 |
 | Cases no version gets right | 1 (`accent-01`) |
 | Versions under test | 4 |
 <!-- /figures:composition -->
 
 **Every one of them carries a written reason for existing**, in both languages. It's the
 most useful rule in the project: a case nobody can justify gets deleted the day it becomes
-inconvenient — usually by the person who just introduced the bug it was catching.
+inconvenient, usually by the person who just introduced the bug it was catching.
 
 The negative cases are there because a set made only of expected hits rewards a system that
 says yes to everything, and that system will score beautifully.
@@ -163,15 +163,15 @@ already solved tells you nothing about the ones ahead.
 | Kind | Name | What it is | Note |
 |---|---|---|---|
 | retrieved | `31 CFR 501.603(b)(1)` | Property blocked under a sanctions programme is reported to OFAC within ten business days of being blocked. | retrieved 2026-08-17 |
-| measured | `regressions` | named cases that worked in one version and stopped in the next | a fact about the runs, not an estimate from them — it does not need an interval |
+| measured | `regressions` | named cases that worked in one version and stopped in the next | a fact about the runs, not an estimate from them; it does not need an interval |
 | measured | `gains` | cases that started working | reported beside the regressions, never netted against them |
 | measured | `passRate` | share of cases a version gets right | always with its 95 % interval: 22 cases put roughly ±14 points around any of them |
 | measured | `paired verdict` | whether the case set can distinguish two versions at all | exact binomial on the discordant pairs; usually the answer is no, and it says so |
 | measured | `flakiness` | cases whose result changes between runs of the same version | determinism is declared per version, because five agreeing rounds can agree by luck |
 | chosen | `CASES` | the 22 screening cases, and the expected answer for each | hand-written to cover transliteration, word order, diacritics and short names |
 | chosen | `WATCHLIST` | the 8 names screened against | invented; a real list is hundreds of thousands of entries and cannot be published |
-| chosen | `TOLERANCE` | edit distance allowed, as a fraction of name length | 15 % — the value that makes v3 buy typos and pay with two distinct people |
-| chosen | `BUDGET_MS` | the 0.04 ms per-name budget v4 falls back under | chosen small enough that the fallback fires sometimes and not always — which is the point of v4 |
+| chosen | `TOLERANCE` | edit distance allowed, as a fraction of name length | 15 %: the value that makes v3 buy typos and pay with two distinct people |
+| chosen | `BUDGET_MS` | the 0.04 ms per-name budget v4 falls back under | chosen small enough that the fallback fires sometimes and not always, which is the point of v4 |
 | chosen | `VERSIONS` | the 4 versions of the screener under test | each is a change any engineer would defend, which is why the arc is worth showing |
 <!-- /figures:provenance -->
 
@@ -183,7 +183,7 @@ went up**, and that is a fact about the runs rather than an estimate from them. 
 weaken when you learn the case set is <!--p:banc.cas-->22<!--/p--> hand-written names: "these two regressed" is true
 of any <!--p:banc.cas-->22<!--/p--> cases you care to pick.
 
-The rates are the opposite, and the bench says so on its own page — <!--p:banc.tauxAvant~pc-->81.8 %<!--/p--> against <!--p:banc.tauxApres~pc-->86.4 %<!--/p-->
+The rates are the opposite, and the bench says so on its own page: <!--p:banc.tauxAvant~pc-->81.8 %<!--/p--> against <!--p:banc.tauxApres~pc-->86.4 %<!--/p-->
 on <!--p:banc.cas-->22<!--/p--> cases is ±<!--p:banc.demiIntervalle-->14<!--/p--> points of interval, which is not a difference this set can establish.
 
 Facts you can trust beside a rate you cannot. That asymmetry is the entire argument for
@@ -200,14 +200,14 @@ src/
   diff.ts        run comparison, the verdict, the regression rule
   interval.ts    Wilson intervals, and whether two versions are separable at all
   stability.ts   the same system N times over, flakiness detection
-  screening.ts   the system under test — four versions of name screening
+  screening.ts   the system under test: four versions of name screening
   cases.ts       the 22 check cases, each with its reason for existing
   server.ts + ui.html    one screen, French or English
 ```
 
 Node 26 with native TypeScript, `node:test`, no build step, no dependencies.
 
-The harness knows nothing about screening — a system under test is any function
+The harness knows nothing about screening; a system under test is any function
 `(input) => output`. A bench that knows its subject only ever serves that subject.
 
 Two details worth the trouble:
@@ -216,7 +216,7 @@ Two details worth the trouble:
 you nothing about the cases after it, and that's often where the information is.
 
 **Duration is reported in milliseconds and percent, or not at all.** The first version
-announced "+1416 %" on a two-millisecond difference — a percentage over a tiny base is
+announced "+1416 %" on a two-millisecond difference: a percentage over a tiny base is
 noise dressed as signal, which is precisely what this project exists to complain about.
 
 The watchlist and every name in it are fictional.
@@ -230,7 +230,7 @@ The watchlist and every name in it are fictional.
 - **Small samples, and it says so.** <!--p:banc.cas-->22<!--/p--> cases put a ±<!--p:banc.demiIntervalle-->14<!--/p--> point interval on any
   rate quoted here. The bench reports that interval rather than hiding it, and refuses to
   call a rate difference an improvement when the case set cannot support the claim. What
-  it does *not* do is tell you how many cases you would need — that depends on the effect
+  it does *not* do is tell you how many cases you would need; that depends on the effect
   you care about, and inventing a number would be the same failing again.
 - **No cost tracking.** Duration is recorded; tokens and money are not.
 
@@ -239,7 +239,7 @@ The watchlist and every name in it are fictional.
 Part of a set of three: [document search that refuses when it doesn't
 know](https://github.com/ArslaneSempai-ui/compliance-document-search), [an onboarding
 agent that escalates when it isn't
-confident](https://github.com/ArslaneSempai-ui/kyc-triage-agent), and this — the bench
+confident](https://github.com/ArslaneSempai-ui/kyc-triage-agent), and this, the bench
 that says whether either of them still works.
 
 ---
@@ -253,7 +253,7 @@ of this repository is that a dashboard renders them identically.
 
 **Not "fuzzy matching is a mistake."** It bought three typo cases. It paid with two
 distinct people becoming indistinguishable. Whether that trade is worth making is a
-compliance decision, not a technical one — the bench's job is to make sure somebody makes
+compliance decision, not a technical one; the bench's job is to make sure somebody makes
 it deliberately rather than by watching an average.
 
 **Not "22 cases is enough."** It is enough to catch a named regression, which is all this
@@ -271,7 +271,7 @@ fails two cases in five.
 **Write the flakiness measurement first.** I built the diff, then discovered the fourth
 version's rate moved between runs, then found my own stability sampler could agree by luck
 over five rounds. Determinism is a property you declare about a system, not one you
-sample — and knowing that up front would have saved two corrections.
+sample, and knowing that up front would have saved two corrections.
 
 **Report counts before rates, everywhere, from the start.** Every rate on this page
 eventually grew an interval, and several were withdrawn. Starting from "2 cases broke"
@@ -292,9 +292,9 @@ exist on the type it renders. It threw on every measurement in French and printe
 | Every case | Carries a written reason, in both languages, enforced by a test |
 | Negative cases | At least 30 % of the set, enforced by a test, so nothing rewards saying yes |
 | The regulation behind it | `31 CFR 501.603(b)(1)`, linked and quoted, guarded by a test |
-| The runs | Named by version, not timestamped — the comparison is reproducible |
+| The runs | Named by version, not timestamped: the comparison is reproducible |
 
 ---
 
-**Arslane Chaouche Ramdane** — six years in AML/KYC and financial crime operations,
+**Arslane Chaouche Ramdane**, six years in AML/KYC and financial crime operations,
 moving into AI transformation work.

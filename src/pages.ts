@@ -132,7 +132,7 @@ window.LOCAL_POSE && window.LOCAL_POSE();
 ` + "</" + "script>\n";
 
 const BANNER = `<p class="renvoi" style="margin-bottom:1.5rem">
-This runs entirely in your browser — no server, no data leaves your machine, and the runs
+This runs entirely in your browser: no server, no data leaves your machine, and the runs
 you produce are yours alone. The watchlist and the 22 cases are <b>invented</b>; a real
 sanctions list runs to hundreds of thousands of entries and cannot be published.
 <a href="https://github.com/ArslaneSempai-ui/regression-bench">Source and method</a>.
@@ -224,7 +224,7 @@ export function build(): void {
     throw new Error(
       "building the page: the `class=\"haut\"` header is not in src/ui.html.\n"
       + "  `indexOf` returns -1, and `indexOf(x, -1)` restarts from zero: the banner would be\n"
-      + "  inserted at the page's first `</div>` — anywhere at all — without an error.");
+      + "  inserted at the page's first `</div>` (anywhere at all) without an error.");
   }
   const finEntete = html.indexOf("\n  </div>", header);
   if (finEntete < 0) {
@@ -243,7 +243,7 @@ export function build(): void {
   writeFileSync(docs + "/.nojekyll", "");
 
   sceller(docs);
-  console.log("docs/ built — commit it and enable GitHub Pages on the docs folder");
+  console.log("docs/ built: commit it and enable GitHub Pages on the docs folder");
 }
 
 if (isMain(import.meta)) build();

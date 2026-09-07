@@ -62,20 +62,20 @@ export function summarise(c) {
     const pc = (x) => (x * 100).toFixed(1) + " %";
     const lines = [];
     if (c.verdict === "regression") {
-        lines.push(`✗ ${c.regressions.length} regression(s) — ${c.before} -> ${c.after}`);
+        lines.push(`✗ ${c.regressions.length} regression(s): ${c.before} -> ${c.after}`);
         for (const r of c.regressions) {
             lines.push(`    ${r.caseId}: expected ${JSON.stringify(r.after.expected)}, got ${JSON.stringify(r.after.actual)}`);
         }
         if (c.gains.length > 0) {
-            lines.push(`  (${c.gains.length} gain(s) elsewhere — the rate moves ${pc(c.rateBefore)} -> ${pc(c.rateAfter)},`);
+            lines.push(`  (${c.gains.length} gain(s) elsewhere: the rate moves ${pc(c.rateBefore)} -> ${pc(c.rateAfter)},`);
             lines.push(`   which does not buy back cases that had been validated once.)`);
         }
     }
     else if (c.verdict === "amelioration") {
-        lines.push(`✓ ${c.gains.length} gain(s), no regression — ${pc(c.rateBefore)} -> ${pc(c.rateAfter)}`);
+        lines.push(`✓ ${c.gains.length} gain(s), no regression: ${pc(c.rateBefore)} -> ${pc(c.rateAfter)}`);
     }
     else if (c.verdict === "neutre") {
-        lines.push(`= no verdict changed — ${pc(c.rateAfter)}`);
+        lines.push(`= no verdict changed: ${pc(c.rateAfter)}`);
     }
     else {
         lines.push(`? no case in common between ${c.before} and ${c.after}: nothing to compare`);
@@ -93,7 +93,7 @@ export function summarise(c) {
         lines.push(`  ${c.silent.length} case(s) with an unchanged verdict but a different output`);
     }
     if (c.added.length > 0 || c.removed.length > 0) {
-        lines.push(`  case set changed: ${c.added.length} added, ${c.removed.length} removed — partial comparison`);
+        lines.push(`  case set changed: ${c.added.length} added, ${c.removed.length} removed; partial comparison`);
     }
     const shiftMs = c.durationAfter - c.durationBefore;
     if (Math.abs(c.durationShift) > 0.25 && Math.abs(shiftMs) >= DURATION_NOISE_MS) {

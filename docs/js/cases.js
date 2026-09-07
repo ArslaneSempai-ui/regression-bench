@@ -21,8 +21,8 @@ export const CASES = [
         why: { fr: "Nom long, saisi correctement.", en: "A long name, entered correctly." } },
     // --- ce que la casse et les accents cassent
     { id: "casse-01", input: "AMINA HADDAD", expected: "Amina Haddad",
-        why: { fr: "Saisie en majuscules — current dans les imports bancaires.",
-            en: "All caps — common in bank data imports." } },
+        why: { fr: "Saisie en majuscules, current dans les imports bancaires.",
+            en: "All caps, common in bank data imports." } },
     { id: "accent-01", input: "Jean Baptiste NDiaye", expected: "Jean-Baptiste N'Diaye",
         why: { fr: "Apostrophe et tiret perdus par un système amont.",
             en: "Apostrophe and hyphen stripped by an upstream system." } },
@@ -31,8 +31,8 @@ export const CASES = [
             en: "Repeated whitespace, common after a copy-paste." } },
     // --- ordre des mots
     { id: "ordre-01", input: "Haddad Amina", expected: "Amina Haddad",
-        why: { fr: "Nom et prénom inversés — la moitié des référentiels le font.",
-            en: "Surname and given name swapped — half of all registries do this." } },
+        why: { fr: "Nom et prénom inversés : la moitié des référentiels le font.",
+            en: "Surname and given name swapped; half of all registries do this." } },
     { id: "ordre-02", input: "Morozov Viktor Alexeyevich", expected: "Viktor Alexeyevich Morozov",
         why: { fr: "Inversion sur un name à trois éléments.",
             en: "Swap on a three-part name." } },

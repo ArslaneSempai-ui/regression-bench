@@ -93,7 +93,7 @@ export async function measureStability<E, S>(
 if (isMain(import.meta)) {
   /* `npm run stability -- ""` donnait zéro tour, donc « stable » partout — voir nombre.ts. */
   const rounds = entierBorne(arg(2), 5).valeur;
-  console.log(`\nStability over ${rounds} rounds — ${CASES.length} cases\n`);
+  console.log(`\nStability over ${rounds} rounds, ${CASES.length} cases\n`);
 
   for (const [name, system] of Object.entries(VERSIONS)) {
     const s = await measureStability(name, system, CASES, rounds);
@@ -102,7 +102,7 @@ if (isMain(import.meta)) {
     } else {
       console.log(`${name.padEnd(18)} ${s.unstable.length} unstable case(s)`);
       for (const u of s.unstable) {
-        console.log(`    ${u.caseId} : ${u.passes}/${u.rounds} — outputs seen: ${u.outputs.join(", ")}`);
+        console.log(`    ${u.caseId} : ${u.passes}/${u.rounds}; outputs seen: ${u.outputs.join(", ")}`);
       }
     }
   }

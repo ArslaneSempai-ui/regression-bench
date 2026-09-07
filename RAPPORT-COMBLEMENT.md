@@ -1,7 +1,7 @@
 # What was checked here, and what it cost
 
 Six checks, run against this repository. **Two found something. Four resisted, and saying
-which four is the point** — a report that lists only what it found does not let anyone tell
+which four is the point**: a report that lists only what it found does not let anyone tell
 a clean repository from an unexamined one.
 
 ---
@@ -11,7 +11,7 @@ a clean repository from an unexamined one.
 ### 1. Fourteen file URLs read through `.pathname`
 
 `new URL(f, import.meta.url).pathname` keeps the percent-encoding. On any checkout whose
-directory name contains a space or an accent, `readFileSync` receives `%20` and fails —
+directory name contains a space or an accent, `readFileSync` receives `%20` and fails,
 silently, wherever a `catch` stands in the way.
 
 Fourteen uses, in ten files. All fixed with `fileURLToPath`.
@@ -31,7 +31,7 @@ repositories, checked md5 for md5. **The tests that defend them are not.** A sha
 without its shared guard is half a mechanism, and twenty-six occurrences are what that half
 costs.
 
-The guard now lives here as `src/chemins.test.ts` — **its own file, not appended to a shared
+The guard now lives here as `src/chemins.test.ts`: **its own file, not appended to a shared
 one**, precisely so it can be copied whole into the repositories that lack it.
 
 **Four files are deliberately not fixed, and the exemption is declared in the test rather
@@ -49,30 +49,30 @@ Proved in both directions: reintroducing the pattern in `store.ts` fails the tes
 
 ## Resisted
 
-**Every marker block is generated and checked.** Five markers in `README.md` — `finding`,
-`versions`, `verdict`, `stakes`, `provenance` — and `src/readme.ts` emits exactly those five
+**Every marker block is generated and checked.** Five markers in `README.md` (`finding`,
+`versions`, `verdict`, `stakes`, `provenance`) and `src/readme.ts` emits exactly those five
 keys. `--check` is already wired into `npm test`. Proved both ways: clean exits 0, a single
 falsified rate in the `finding` block exits 1 and names the block, regeneration returns to
 clean.
 
 **Fence parity.** `README.md` carries 8 fences, even. No orphan.
 
-**Selections declare what they drop.** The one `continue` in the codebase — `diff.ts:64`,
-skipping cases absent from the second run — does not lose them: they come back as `removed`,
+**Selections declare what they drop.** The one `continue` in the codebase (`diff.ts:64`,
+skipping cases absent from the second run) does not lose them: they come back as `removed`,
 counted, beside `added`. The discard is declared.
 
 **No dead guard found.** No constant predicate, no `catch` returning a fixed value, no
 always-true condition in the published paths.
 
-**Comment figures are correct today.** The load-bearing one — "22 cases", asserted in four
-files — matches `CASES.length`. `inventory.ts` says "81.8 % against 86.4 % on 22 cases" and
+**Comment figures are correct today.** The load-bearing one ("22 cases", asserted in four
+files) matches `CASES.length`. `inventory.ts` says "81.8 % against 86.4 % on 22 cases" and
 the generated block says "81.8 % to 86.4 %… On 22 cases". They agree. **They are hand-typed
 and will rust the day the runs change**, which is a latent defect and worth saying, but it
 is not one today.
 
 **Hostile input does not apply here.** This repository parses no user-supplied file. The one
-place an outside string reaches the filesystem — `/api/compare?before=…` into
-`store.ts:pathFor` — is sanitised: every character outside `[a-z0-9_.-]` becomes `_`, so no
+place an outside string reaches the filesystem (`/api/compare?before=…` into
+`store.ts:pathFor`) is sanitised: every character outside `[a-z0-9_.-]` becomes `_`, so no
 separator survives and traversal is impossible. One note without a finding: `all()` calls
 `JSON.parse` unguarded on every file in `data/runs`, so a corrupted run file takes down the
 listing rather than being skipped with a name. The data is self-produced, which is why this
@@ -83,7 +83,7 @@ is a note and not a defect.
 ## Left alone, on purpose
 
 `src/registre.css` and `docs/registre.css` are modified in the working tree and are **not
-mine**. They were rewritten at 21:10:52 by another session propagating a contrast fix — the
+mine**. They were rewritten at 21:10:52 by another session propagating a contrast fix; the
 same content landed in `economics`, `remediation` and `identite` in the same second. **A file
 someone is editing belongs to someone who is working.** They are not committed here.
 
@@ -92,5 +92,5 @@ someone is editing belongs to someone who is working.** They are not committed h
 ## Verification
 
     npm test    39 tests, 39 pass, 0 fail
-    figures.ts, interval.ts, provenance.ts, cli.ts — md5 identical to cascade,
+    figures.ts, interval.ts, provenance.ts, cli.ts: md5 identical to cascade,
     before and after this work.
